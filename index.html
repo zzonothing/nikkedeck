@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게임 덱 메이커</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .share-btn {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .clear-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+
+        .load-btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .url-display {
+            margin-top: 10px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            font-family: monospace;
+            word-break: break-all;
+            display: none;
+        }
+
+        .url-display.show {
+            display: block;
+        }
+
+        .copy-url-btn {
+            margin-top: 10px;
+            background: linear-gradient(45deg, #48bb78, #68d391);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .deck-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .deck {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .deck-title {
+            font-weight: bold;
+            color: #4a5568;
+            font-size: 1.2rem;
+            min-width: 60px;
+            text-align: left;
+        }
+
+        .deck-slots {
+            display: flex;
+            gap: 10px;
+        }
+
+        .deck-slot {
+            width: 80px;
+            height: 80px;
+            border: 3px dashed #cbd5e0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .deck-slot.drag-over {
+            border-color: #4299e1;
+            background: #ebf8ff;
+            transform: scale(1.05);
+        }
+
+        .deck-slot.occupied {
+            border: 3px solid #48bb78;
+            background: #f0fff4;
+        }
+
+        .character-pool {
+            border-top: 3px solid #e2e8f0;
+            padding-top: 30px;
+        }
+
+        .pool-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4a5568;
+            font-size: 1.3rem;
+        }
+
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            justify-items: center;
+            position: relative;
+        }
+
+        .character-grid .drop-indicator {
+            position: absolute;
+            width: 4px;
+            height: 80px;
+            background: #4299e1;
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+
+        .character-grid .drop-indicator.show {
+            opacity: 1;
+        }
+
+        .character {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            user-select: none;
+        }
+
+        .character:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .character.dragging {
+            cursor: grabbing;
+            opacity: 0.8;
+            transform: rotate(5deg);
+        }
+
+        .character.placed {
+            position: relative;
+        }
+
+        .character.placed::after {
+            content: '×';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #e53e3e;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid white;
+        }
+
+        .character.placed::after:hover {
+            background: #c53030;
+            transform: scale(1.1);
+        }
+
+        .character-1 { background: linear-gradient(45deg, #ff6b6b, #ff8e8e); }
+        .character-2 { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
+        .character-3 { background: linear-gradient(45deg, #45b7d1, #96c93d); }
+        .character-4 { background: linear-gradient(45deg, #f093fb, #f5576c); }
+        .character-5 { background: linear-gradient(45deg, #4facfe, #00f2fe); }
+        .character-6 { background: linear-gradient(45deg, #fa709a, #fee140); }
+        .character-7 { background: linear-gradient(45deg, #a8edea, #fed6e3); }
+        .character-8 { background: linear-gradient(45deg, #ff9a9e, #fecfef); }
+        .character-9 { background: linear-gradient(45deg, #667eea, #764ba2); }
+        .character-10 { background: linear-gradient(45deg, #f093fb, #f5576c); }
+        .character-11 { background: linear-gradient(45deg, #ffecd2, #fcb69f); }
+        .character-12 { background: linear-gradient(45deg, #a8edea, #fed6e3); }
+        .character-13 { background: linear-gradient(45deg, #ffd89b, #19547b); }
+        .character-14 { background: linear-gradient(45deg, #89f7fe, #66a6ff); }
+        .character-15 { background: linear-gradient(45deg, #fdbb2d, #22c1c3); }
+
+        .empty-slot::before {
+            content: '+';
+            font-size: 24px;
+            color: #a0aec0;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .deck {
+                flex-wrap: wrap;
+            }
+            
+            .deck-title {
+                min-width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+            
+            .character, .deck-slot {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 게임 덱 메이커</h1>
+        
+        <div class="controls">
+            <button class="control-btn share-btn" onclick="shareConfiguration()">
+                📤 덱 공유하기
+            </button>
+            <button class="control-btn clear-btn" onclick="clearAllDecks()">
+                🗑️ 전체 초기화
+            </button>
+            <button class="control-btn load-btn" onclick="loadFromUrl()">
+                📥 URL로 불러오기
+            </button>
+        </div>
+        
+        <div class="url-display" id="urlDisplay">
+            <div>공유 URL이 생성되었습니다:</div>
+            <div id="shareUrl" style="margin: 10px 0; font-weight: bold;"></div>
+            <button class="copy-url-btn" onclick="copyToClipboard()">📋 URL 복사</button>
+        </div>
+        
+        <div class="deck-container">
+            <div class="deck">
+                <div class="deck-title">덱 1</div>
+                <div class="deck-slots" data-deck="1">
+                    <div class="deck-slot empty-slot" data-slot="0"></div>
+                    <div class="deck-slot empty-slot" data-slot="1"></div>
+                    <div class="deck-slot empty-slot" data-slot="2"></div>
+                    <div class="deck-slot empty-slot" data-slot="3"></div>
+                    <div class="deck-slot empty-slot" data-slot="4"></div>
+                </div>
+            </div>
+            
+            <div class="deck">
+                <div class="deck-title">덱 2</div>
+                <div class="deck-slots" data-deck="2">
+                    <div class="deck-slot empty-slot" data-slot="0"></div>
+                    <div class="deck-slot empty-slot" data-slot="1"></div>
+                    <div class="deck-slot empty-slot" data-slot="2"></div>
+                    <div class="deck-slot empty-slot" data-slot="3"></div>
+                    <div class="deck-slot empty-slot" data-slot="4"></div>
+                </div>
+            </div>
+            
+            <div class="deck">
+                <div class="deck-title">덱 3</div>
+                <div class="deck-slots" data-deck="3">
+                    <div class="deck-slot empty-slot" data-slot="0"></div>
+                    <div class="deck-slot empty-slot" data-slot="1"></div>
+                    <div class="deck-slot empty-slot" data-slot="2"></div>
+                    <div class="deck-slot empty-slot" data-slot="3"></div>
+                    <div class="deck-slot empty-slot" data-slot="4"></div>
+                </div>
+            </div>
+            
+            <div class="deck">
+                <div class="deck-title">덱 4</div>
+                <div class="deck-slots" data-deck="4">
+                    <div class="deck-slot empty-slot" data-slot="0"></div>
+                    <div class="deck-slot empty-slot" data-slot="1"></div>
+                    <div class="deck-slot empty-slot" data-slot="2"></div>
+                    <div class="deck-slot empty-slot" data-slot="3"></div>
+                    <div class="deck-slot empty-slot" data-slot="4"></div>
+                </div>
+            </div>
+            
+            <div class="deck">
+                <div class="deck-title">덱 5</div>
+                <div class="deck-slots" data-deck="5">
+                    <div class="deck-slot empty-slot" data-slot="0"></div>
+                    <div class="deck-slot empty-slot" data-slot="1"></div>
+                    <div class="deck-slot empty-slot" data-slot="2"></div>
+                    <div class="deck-slot empty-slot" data-slot="3"></div>
+                    <div class="deck-slot empty-slot" data-slot="4"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="character-pool">
+            <div class="pool-title">🎯 캐릭터 선택</div>
+            <div class="character-grid">
+                <div class="character character-1" draggable="true" data-character="1">A</div>
+                <div class="character character-2" draggable="true" data-character="2">B</div>
+                <div class="character character-3" draggable="true" data-character="3">C</div>
+                <div class="character character-4" draggable="true" data-character="4">D</div>
+                <div class="character character-5" draggable="true" data-character="5">E</div>
+                <div class="character character-6" draggable="true" data-character="6">F</div>
+                <div class="character character-7" draggable="true" data-character="7">G</div>
+                <div class="character character-8" draggable="true" data-character="8">H</div>
+                <div class="character character-9" draggable="true" data-character="9">I</div>
+                <div class="character character-10" draggable="true" data-character="10">J</div>
+                <div class="character character-11" draggable="true" data-character="11">K</div>
+                <div class="character character-12" draggable="true" data-character="12">L</div>
+                <div class="character character-13" draggable="true" data-character="13">M</div>
+                <div class="character character-14" draggable="true" data-character="14">N</div>
+                <div class="character character-15" draggable="true" data-character="15">O</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let draggedElement = null;
+        let draggedFromDeck = null;
+        let draggedFromSlot = null;
+        let draggedFromPool = false;
+        let dropIndicator = null;
+
+        // Page load event - load configuration from URL
+        window.addEventListener('load', function() {
+            loadConfigurationFromUrl();
+        });
+
+        // Base64 encoding/decoding functions
+        function encodeConfiguration() {
+            const config = {
+                decks: [],
+                pool: []
+            };
+            
+            // Collect character info from each deck
+            for (let i = 1; i <= 5; i++) {
+                const deckSlots = document.querySelectorAll(`[data-deck="${i}"] .deck-slot`);
+                const deck = [];
+                deckSlots.forEach(slot => {
+                    if (slot.children.length > 0) {
+                        const character = slot.children[0];
+                        deck.push(character.dataset.character);
+                    } else {
+                        deck.push(null);
+                    }
+                });
+                config.decks.push(deck);
+            }
+            
+            // Collect character pool order
+            const poolCharacters = document.querySelectorAll('.character-grid .character');
+            poolCharacters.forEach(char => {
+                config.pool.push(char.dataset.character);
+            });
+            
+            return btoa(JSON.stringify(config));
+        }
+
+        function decodeConfiguration(encodedConfig) {
+            try {
+                return JSON.parse(atob(encodedConfig));
+            } catch (e) {
+                console.error('Invalid configuration:', e);
+                return null;
+            }
+        }
+
+        // Apply configuration
+        function applyConfiguration(config) {
+            if (!config || !config.decks || !config.pool) return false;
+            
+            // Clear all decks
+            clearAllDecks();
+            
+            // Apply deck configuration
+            config.decks.forEach((deck, deckIndex) => {
+                deck.forEach((charId, slotIndex) => {
+                    if (charId) {
+                        const character = document.querySelector(`[data-character="${charId}"]`);
+                        const slot = document.querySelector(`[data-deck="${deckIndex + 1}"] [data-slot="${slotIndex}"]`);
+                        if (character && slot) {
+                            slot.appendChild(character);
+                            slot.classList.add('occupied');
+                            slot.classList.remove('empty-slot');
+                            character.classList.add('placed');
+                        }
+                    }
+                });
+            });
+            
+            // Apply character pool order
+            const pool = document.querySelector('.character-grid');
+            config.pool.forEach(charId => {
+                const character = document.querySelector(`[data-character="${charId}"]`);
+                if (character && character.parentElement.classList.contains('character-grid')) {
+                    pool.appendChild(character);
+                }
+            });
+            
+            return true;
+        }
+
+        // Load configuration from URL
+        function loadConfigurationFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const configParam = urlParams.get('config');
+            
+            if (configParam) {
+                const config = decodeConfiguration(configParam);
+                if (config) {
+                    applyConfiguration(config);
+                    showNotification('덱 구성이 URL에서 로드되었습니다!');
+                } else {
+                    showNotification('잘못된 URL 형식입니다.', 'error');
+                }
+            }
+        }
+
+        // Share configuration function
+        function shareConfiguration() {
+            const encodedConfig = encodeConfiguration();
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareUrl = `${baseUrl}?config=${encodedConfig}`;
+            
+            document.getElementById('shareUrl').textContent = shareUrl;
+            document.getElementById('urlDisplay').classList.add('show');
+            
+            showNotification('공유 URL이 생성되었습니다!');
+        }
+
+        // Copy to clipboard function
+        async function copyToClipboard() {
+            const urlText = document.getElementById('shareUrl').textContent;
+            try {
+                await navigator.clipboard.writeText(urlText);
+                showNotification('URL이 클립보드에 복사되었습니다!');
+            } catch (err) {
+                // Fallback for browsers without clipboard API support
+                const textArea = document.createElement('textarea');
+                textArea.value = urlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showNotification('URL이 복사되었습니다!');
+            }
+        }
+
+        // Load from URL function
+        function loadFromUrl() {
+            const url = prompt('불러올 URL을 입력해주세요:');
+            if (url) {
+                try {
+                    const urlObj = new URL(url);
+                    const configParam = urlObj.searchParams.get('config');
+                    if (configParam) {
+                        const config = decodeConfiguration(configParam);
+                        if (config && applyConfiguration(config)) {
+                            showNotification('덱 구성이 성공적으로 로드되었습니다!');
+                            // Update URL
+                            window.history.replaceState({}, '', `${window.location.pathname}?config=${configParam}`);
+                        } else {
+                            showNotification('잘못된 설정 데이터입니다.', 'error');
+                        }
+                    } else {
+                        showNotification('URL에 설정 데이터가 없습니다.', 'error');
+                    }
+                } catch (e) {
+                    showNotification('잘못된 URL 형식입니다.', 'error');
+                }
+            }
+        }
+
+        // Clear all decks function
+        function clearAllDecks() {
+            // Return all placed characters to pool
+            const placedCharacters = document.querySelectorAll('.character.placed');
+            const pool = document.querySelector('.character-grid');
+            
+            placedCharacters.forEach(char => {
+                pool.appendChild(char);
+                char.classList.remove('placed');
+            });
+            
+            // Reset all deck slots
+            const allSlots = document.querySelectorAll('.deck-slot');
+            allSlots.forEach(slot => {
+                slot.classList.remove('occupied');
+                slot.classList.add('empty-slot');
+            });
+            
+            // Hide URL display
+            document.getElementById('urlDisplay').classList.remove('show');
+            
+            showNotification('모든 덱이 초기화되었습니다.');
+        }
+
+        // Show notification function
+        function showNotification(message, type = 'success') {
+            // Remove existing notification
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            
+            if (type === 'error') {
+                notification.style.background = '#e53e3e';
+            }
+            
+            document.body.appendChild(notification);
+            
+            // Show animation
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Create drop indicator function
+        function createDropIndicator() {
+            if (!dropIndicator) {
+                dropIndicator = document.createElement('div');
+                dropIndicator.className = 'drop-indicator';
+                document.querySelector('.character-grid').appendChild(dropIndicator);
+            }
+            return dropIndicator;
+        }
+
+        // Calculate drop position in character pool
+        function getDropPosition(e) {
+            const grid = document.querySelector('.character-grid');
+            const characters = [...grid.children].filter(child => child.classList.contains('character'));
+            const rect = grid.getBoundingClientRect();
+            
+            let insertIndex = characters.length;
+            let indicatorLeft = 0;
+            
+            for (let i = 0; i < characters.length; i++) {
+                const charRect = characters[i].getBoundingClientRect();
+                const charCenterX = charRect.left + charRect.width / 2;
+                
+                if (e.clientX < charCenterX) {
+                    insertIndex = i;
+                    indicatorLeft = charRect.left - rect.left - 2;
+                    break;
+                }
+            }
+            
+            // If last position
+            if (insertIndex === characters.length && characters.length > 0) {
+                const lastCharRect = characters[characters.length - 1].getBoundingClientRect();
+                indicatorLeft = lastCharRect.right - rect.left + 5;
+            }
+            
+            return { index: insertIndex, left: indicatorLeft };
+        }
+
+        // Drag start event
+        document.addEventListener('dragstart', function(e) {
+            if (e.target.classList.contains('character')) {
+                draggedElement = e.target;
+                e.target.classList.add('dragging');
+                
+                // Check if dragging from deck slot
+                const parentSlot = e.target.parentElement;
+                if (parentSlot.classList.contains('deck-slot')) {
+                    draggedFromDeck = parentSlot.parentElement.dataset.deck;
+                    draggedFromSlot = parentSlot.dataset.slot;
+                    draggedFromPool = false;
+                } else if (parentSlot.classList.contains('character-grid')) {
+                    // Dragging from character pool
+                    draggedFromPool = true;
+                    draggedFromDeck = null;
+                    draggedFromSlot = null;
+                }
+            }
+        });
+
+        // Drag end event
+        document.addEventListener('dragend', function(e) {
+            if (e.target.classList.contains('character')) {
+                e.target.classList.remove('dragging');
+                if (dropIndicator) {
+                    dropIndicator.classList.remove('show');
+                }
+                draggedElement = null;
+                draggedFromDeck = null;
+                draggedFromSlot = null;
+                draggedFromPool = false;
+            }
+        });
+
+        // Drag over event
+        document.addEventListener('dragover', function(e) {
+            if (e.target.classList.contains('deck-slot')) {
+                e.preventDefault();
+                e.target.classList.add('drag-over');
+            }
+            // Character pool drag over
+            else if (e.target.classList.contains('character-grid') || 
+                     (e.target.classList.contains('character') && e.target.parentElement.classList.contains('character-grid'))) {
+                e.preventDefault();
+                
+                if (draggedFromPool && draggedElement) {
+                    const indicator = createDropIndicator();
+                    const position = getDropPosition(e);
+                    indicator.style.left = position.left + 'px';
+                    indicator.classList.add('show');
+                }
+            }
+        });
+
+        // Drag leave event
+        document.addEventListener('dragleave', function(e) {
+            if (e.target.classList.contains('deck-slot')) {
+                e.target.classList.remove('drag-over');
+            }
+        });
+
+        // Drop event
+        document.addEventListener('drop', function(e) {
+            // Drop on deck slot
+            if (e.target.classList.contains('deck-slot')) {
+                e.preventDefault();
+                e.target.classList.remove('drag-over');
+                
+                if (draggedElement) {
+                    // Check if slot already has character
+                    if (e.target.children.length > 0) {
+                        // Swap characters
+                        const existingCharacter = e.target.children[0];
+                        
+                        if (draggedFromDeck && draggedFromSlot !== null) {
+                            // Swap between decks
+                            const originalSlot = document.querySelector(`[data-deck="${draggedFromDeck}"] [data-slot="${draggedFromSlot}"]`);
+                            originalSlot.appendChild(existingCharacter);
+                            originalSlot.classList.add('occupied');
+                            originalSlot.classList.remove('empty-slot');
+                        } else {
+                            // Return to character pool
+                            document.querySelector('.character-grid').appendChild(existingCharacter);
+                            existingCharacter.classList.remove('placed');
+                        }
+                    } else if (draggedFromDeck && draggedFromSlot !== null) {
+                        // Clear original slot
+                        const originalSlot = document.querySelector(`[data-deck="${draggedFromDeck}"] [data-slot="${draggedFromSlot}"]`);
+                        originalSlot.classList.remove('occupied');
+                        originalSlot.classList.add('empty-slot');
+                    }
+                    
+                    // Place character in new position
+                    e.target.appendChild(draggedElement);
+                    e.target.classList.add('occupied');
+                    e.target.classList.remove('empty-slot');
+                    draggedElement.classList.add('placed');
+                }
+            }
+            // Drop on character pool
+            else if ((e.target.classList.contains('character-grid') || 
+                     (e.target.classList.contains('character') && e.target.parentElement.classList.contains('character-grid'))) 
+                     && draggedFromPool && draggedElement) {
+                e.preventDefault();
+                
+                const grid = document.querySelector('.character-grid');
+                const characters = [...grid.children].filter(child => child.classList.contains('character'));
+                const position = getDropPosition(e);
+                
+                // Remove dragged character
+                draggedElement.remove();
+                
+                // Insert at new position
+                if (position.index >= characters.length) {
+                    grid.appendChild(draggedElement);
+                } else {
+                    grid.insertBefore(draggedElement, characters[position.index]);
+                }
+                
+                if (dropIndicator) {
+                    dropIndicator.classList.remove('show');
+                }
+            }
+        });
+
+        // Character remove button click
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('character') && e.target.classList.contains('placed')) {
+                const clickX = e.offsetX;
+                const clickY = e.offsetY;
+                const rect = e.target.getBoundingClientRect();
+                
+                // Check if clicking on remove button area (top-right)
+                if (clickX > rect.width - 28 && clickY < 28) {
+                    const slot = e.target.parentElement;
+                    document.querySelector('.character-grid').appendChild(e.target);
+                    e.target.classList.remove('placed');
+                    slot.classList.remove('occupied');
+                    slot.classList.add('empty-slot');
+                    return;
+                }
+            }
+        });
+
+        // Double-click to return character to pool
+        document.addEventListener('dblclick', function(e) {
+            if (e.target.classList.contains('character') && e.target.parentElement.classList.contains('deck-slot')) {
+                const slot = e.target.parentElement;
+                document.querySelector('.character-grid').appendChild(e.target);
+                e.target.classList.remove('placed');
+                slot.classList.remove('occupied');
+                slot.classList.add('empty-slot');
+            }
+        });
+    </script>
+</body>
+</html>
