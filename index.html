@@ -201,7 +201,7 @@
         .character {
             width: 100px;
             height: 100px;
-            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            background: white;
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -216,7 +216,7 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .character:hover {
@@ -226,8 +226,21 @@
 
         .character.dragging {
             cursor: grabbing;
-            opacity: 0.8;
-            transform: rotate(5deg);
+            opacity: 0.5;
+            transform: rotate(5deg) scale(0.95);
+            z-index: 1000;
+        }
+
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.9;
+            transform: scale(1.15) rotate(8deg);
+            border: 3px solid #4299e1;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            transition: none;
+            border-radius: 12px;
         }
 
         .character.placed {
@@ -237,17 +250,17 @@
         .character.placed::after {
             content: '×';
             position: absolute;
-            top: -10px;
-            right: -10px;
-            width: 24px;
-            height: 24px;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
             background: #e53e3e;
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -608,6 +621,7 @@
         let touchTarget = null;
         let isTouchDragging = false;
         let touchDropTarget = null;
+        let dragGhost = null;
 
         // Page load event - load configuration from URL
         window.addEventListener('load', function() {
@@ -1007,6 +1021,33 @@
             }
         });
 
+        // Create drag ghost function
+        function createDragGhost(element) {
+            const ghost = element.cloneNode(true);
+            ghost.classList.add('drag-ghost');
+            ghost.classList.remove('placed', 'dragging');
+            ghost.style.width = element.offsetWidth + 'px';
+            ghost.style.height = element.offsetHeight + 'px';
+            document.body.appendChild(ghost);
+            return ghost;
+        }
+
+        // Update drag ghost position
+        function updateDragGhostPosition(x, y) {
+            if (dragGhost) {
+                dragGhost.style.left = (x - dragGhost.offsetWidth / 2) + 'px';
+                dragGhost.style.top = (y - dragGhost.offsetHeight / 2) + 'px';
+            }
+        }
+
+        // Remove drag ghost
+        function removeDragGhost() {
+            if (dragGhost) {
+                dragGhost.remove();
+                dragGhost = null;
+            }
+        }
+
         // Touch events for mobile drag and drop
         document.addEventListener('touchstart', function(e) {
             if (e.target.classList.contains('character')) {
@@ -1043,11 +1084,19 @@
                 if (!isTouchDragging && (deltaX > 10 || deltaY > 10)) {
                     isTouchDragging = true;
                     touchTarget.classList.add('dragging');
+                    
+                    // Create and show drag ghost
+                    dragGhost = createDragGhost(touchTarget);
+                    updateDragGhostPosition(touch.clientX, touch.clientY);
+                    
                     e.preventDefault();
                 }
                 
                 if (isTouchDragging) {
                     e.preventDefault();
+                    
+                    // Update drag ghost position
+                    updateDragGhostPosition(touch.clientX, touch.clientY);
                     
                     // Find element under touch point
                     const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -1115,6 +1164,9 @@
             document.querySelectorAll('.deck-slot').forEach(slot => {
                 slot.classList.remove('drag-over');
             });
+            
+            // Remove drag ghost
+            removeDragGhost();
             
             touchStartPos = null;
             touchTarget = null;
