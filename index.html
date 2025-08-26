@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>게임 덱 메이커</title>
+    <title>니케 덱 메이커</title>
     <style>
         * {
             margin: 0;
@@ -105,7 +105,7 @@
         .deck-container {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 8px;
             margin-bottom: 30px;
             align-items: center;
         }
@@ -135,8 +135,8 @@
         }
 
         .deck-slot {
-            width: 100px;
-            height: 100px;
+            width: 85px;
+            height: 85px;
             border: 3px dashed #cbd5e0;
             border-radius: 12px;
             display: flex;
@@ -147,7 +147,7 @@
             cursor: pointer;
             position: relative;
             overflow: visible;
-            margin: 12px;
+            margin: 6px;
         }
 
         .deck-slot.drag-over {
@@ -161,9 +161,10 @@
             background: #f0fff4;
         }
 
-        .character-pool {
+        .candidate-pool, .character-pool {
             border-top: 3px solid #e2e8f0;
             padding-top: 20px;
+            margin-bottom: 20px;
         }
 
         .pool-title {
@@ -440,7 +441,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎮 게임 덱 메이커</h1>
+        <h1>🎮 니케 덱 메이커</h1>
         
         <div class="controls">
             <button class="control-btn share-btn" onclick="shareConfiguration()">
@@ -517,8 +518,15 @@
             </div>
         </div>
         
+        <div class="candidate-pool">
+            <div class="pool-title">🎯 후보</div>
+            <div class="character-grid" id="candidateGrid">
+                <!-- Candidate characters will be populated dynamically -->
+            </div>
+        </div>
+        
         <div class="character-pool">
-            <div class="pool-title">🎯 캐릭터 선택</div>
+            <div class="pool-title">🎯 니케</div>
             <div class="character-grid">
                 <div class="character character-015" draggable="true" data-character="015" style="background-image: url('images/si_c015_00_s.webp');"></div>
                 <div class="character character-016" draggable="true" data-character="016" style="background-image: url('images/si_c016_00_s.webp');"></div>
@@ -632,6 +640,7 @@
         function encodeConfiguration() {
             const config = {
                 decks: [],
+                candidates: [],
                 pool: []
             };
             
@@ -650,8 +659,14 @@
                 config.decks.push(deck);
             }
             
+            // Collect candidate pool order
+            const candidateCharacters = document.querySelectorAll('#candidateGrid .character');
+            candidateCharacters.forEach(char => {
+                config.candidates.push(char.dataset.character);
+            });
+            
             // Collect character pool order
-            const poolCharacters = document.querySelectorAll('.character-grid .character');
+            const poolCharacters = document.querySelectorAll('.character-pool .character-grid .character');
             poolCharacters.forEach(char => {
                 config.pool.push(char.dataset.character);
             });
@@ -661,7 +676,12 @@
 
         function decodeConfiguration(encodedConfig) {
             try {
-                return JSON.parse(atob(encodedConfig));
+                const config = JSON.parse(atob(encodedConfig));
+                // Ensure candidates array exists for backward compatibility
+                if (!config.candidates) {
+                    config.candidates = [];
+                }
+                return config;
             } catch (e) {
                 console.error('Invalid configuration:', e);
                 return null;
@@ -691,11 +711,22 @@
                 });
             });
             
+            // Apply candidate pool order
+            if (config.candidates && config.candidates.length > 0) {
+                const candidatePool = document.querySelector('#candidateGrid');
+                config.candidates.forEach(charId => {
+                    const character = document.querySelector(`[data-character="${charId}"]`);
+                    if (character && !character.classList.contains('placed')) {
+                        candidatePool.appendChild(character);
+                    }
+                });
+            }
+            
             // Apply character pool order
-            const pool = document.querySelector('.character-grid');
+            const pool = document.querySelector('.character-pool .character-grid');
             config.pool.forEach(charId => {
                 const character = document.querySelector(`[data-character="${charId}"]`);
-                if (character && character.parentElement.classList.contains('character-grid')) {
+                if (character && !character.classList.contains('placed') && character.parentElement !== document.querySelector('#candidateGrid')) {
                     pool.appendChild(character);
                 }
             });
@@ -776,9 +807,9 @@
 
         // Clear all decks function
         function clearAllDecks() {
-            // Return all placed characters to pool
+            // Return all placed characters to main pool
             const placedCharacters = document.querySelectorAll('.character.placed');
-            const pool = document.querySelector('.character-grid');
+            const pool = document.querySelector('.character-pool .character-grid');
             
             placedCharacters.forEach(char => {
                 pool.appendChild(char);
@@ -790,6 +821,13 @@
             allSlots.forEach(slot => {
                 slot.classList.remove('occupied');
                 slot.classList.add('empty-slot');
+            });
+            
+            // Clear candidate pool
+            const candidatePool = document.querySelector('#candidateGrid');
+            const candidateCharacters = candidatePool.querySelectorAll('.character');
+            candidateCharacters.forEach(char => {
+                pool.appendChild(char);
             });
             
             // Hide URL display
@@ -947,8 +985,8 @@
                             originalSlot.classList.add('occupied');
                             originalSlot.classList.remove('empty-slot');
                         } else {
-                            // Return to character pool
-                            document.querySelector('.character-grid').appendChild(existingCharacter);
+                            // Return to main character pool
+                            document.querySelector('.character-pool .character-grid').appendChild(existingCharacter);
                             existingCharacter.classList.remove('placed');
                         }
                     } else if (draggedFromDeck && draggedFromSlot !== null) {
@@ -971,7 +1009,7 @@
                      && draggedFromPool && draggedElement) {
                 e.preventDefault();
                 
-                const grid = document.querySelector('.character-grid');
+                const grid = e.target.classList.contains('character-grid') ? e.target : e.target.parentElement;
                 const characters = [...grid.children].filter(child => child.classList.contains('character'));
                 const position = getDropPosition(e);
                 
@@ -994,21 +1032,23 @@
         // Character remove button click
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('character') && e.target.classList.contains('placed')) {
-                const clickX = e.offsetX;
-                const clickY = e.offsetY;
                 const rect = e.target.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
                 
                 // Check if clicking on remove button area (top-right)
                 if (clickX > rect.width - 28 && clickY < 28) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     const slot = e.target.parentElement;
-                    document.querySelector('.character-grid').appendChild(e.target);
+                    document.querySelector('.character-pool .character-grid').appendChild(e.target);
                     e.target.classList.remove('placed');
                     slot.classList.remove('occupied');
                     slot.classList.add('empty-slot');
                     return;
                 }
             }
-        });
+        }, { passive: false });
 
         // Double-click to return character to pool
         document.addEventListener('dblclick', function(e) {
@@ -1048,9 +1088,28 @@
             }
         }
 
-        // Touch events for mobile drag and drop
+        // Touch events for mobile drag and drop  
         document.addEventListener('touchstart', function(e) {
             if (e.target.classList.contains('character')) {
+                // Check if touching the remove button area for placed characters
+                if (e.target.classList.contains('placed')) {
+                    const rect = e.target.getBoundingClientRect();
+                    const touchX = e.touches[0].clientX - rect.left;
+                    const touchY = e.touches[0].clientY - rect.top;
+                    
+                    // If touching remove button area, handle removal
+                    if (touchX > rect.width - 28 && touchY < 28) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const slot = e.target.parentElement;
+                        document.querySelector('.character-pool .character-grid').appendChild(e.target);
+                        e.target.classList.remove('placed');
+                        slot.classList.remove('occupied');
+                        slot.classList.add('empty-slot');
+                        return;
+                    }
+                }
+                
                 e.preventDefault();
                 touchStartPos = {
                     x: e.touches[0].clientX,
@@ -1113,6 +1172,15 @@
                     } else if (elementBelow && elementBelow.parentElement && elementBelow.parentElement.classList.contains('deck-slot')) {
                         elementBelow.parentElement.classList.add('drag-over');
                         touchDropTarget = elementBelow.parentElement;
+                    } else if (elementBelow && (elementBelow.classList.contains('character-grid') || 
+                              (elementBelow.classList.contains('character') && elementBelow.parentElement.classList.contains('character-grid')))) {
+                        // Handle drop on character pools for reordering
+                        if (draggedFromPool) {
+                            const grid = elementBelow.classList.contains('character-grid') ? elementBelow : elementBelow.parentElement;
+                            touchDropTarget = grid;
+                        } else {
+                            touchDropTarget = null;
+                        }
                     } else {
                         touchDropTarget = null;
                     }
@@ -1138,8 +1206,8 @@
                             originalSlot.classList.add('occupied');
                             originalSlot.classList.remove('empty-slot');
                         } else {
-                            // Return to character pool
-                            document.querySelector('.character-grid').appendChild(existingCharacter);
+                            // Return to main character pool
+                            document.querySelector('.character-pool .character-grid').appendChild(existingCharacter);
                             existingCharacter.classList.remove('placed');
                         }
                     } else if (draggedFromDeck && draggedFromSlot !== null) {
@@ -1154,6 +1222,33 @@
                     touchDropTarget.classList.add('occupied');
                     touchDropTarget.classList.remove('empty-slot');
                     touchTarget.classList.add('placed');
+                } else if (touchDropTarget.classList.contains('character-grid') && draggedFromPool) {
+                    // Handle reordering within character pools
+                    const touch = e.changedTouches[0];
+                    const grid = touchDropTarget;
+                    const characters = [...grid.children].filter(child => child.classList.contains('character'));
+                    
+                    // Find insertion point
+                    let insertIndex = characters.length;
+                    for (let i = 0; i < characters.length; i++) {
+                        const charRect = characters[i].getBoundingClientRect();
+                        const charCenterX = charRect.left + charRect.width / 2;
+                        
+                        if (touch.clientX < charCenterX) {
+                            insertIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    // Remove dragged character
+                    touchTarget.remove();
+                    
+                    // Insert at new position
+                    if (insertIndex >= characters.length) {
+                        grid.appendChild(touchTarget);
+                    } else {
+                        grid.insertBefore(touchTarget, characters[insertIndex]);
+                    }
                 }
             }
             
