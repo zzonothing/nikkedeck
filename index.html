@@ -113,9 +113,9 @@
         .deck {
             display: flex;
             align-items: center;
-            gap: 15px;
             justify-content: center;
             flex-wrap: wrap;
+            position: relative;
         }
 
         .deck-title {
@@ -124,7 +124,10 @@
             font-size: 1.1rem;
             min-width: 60px;
             text-align: center;
-            margin-bottom: 10px;
+            position: absolute;
+            left: -80px;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         .deck-slots {
@@ -167,7 +170,7 @@
             margin-bottom: 20px;
         }
         
-        .candidate-pool .character-grid {
+        .candidate-pool .character-grid, .character-pool .character-grid {
             min-height: 120px;
             border: 2px dashed #cbd5e0;
             border-radius: 12px;
@@ -177,6 +180,17 @@
         
         .candidate-pool .character-grid:empty::before {
             content: '후보 영역 - 니케를 여기로 드래그해주세요';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #a0aec0;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .character-pool .character-grid:empty::before {
+            content: '니케 영역 - 모든 니케 캐릭터들';
             display: flex;
             align-items: center;
             justify-content: center;
@@ -206,7 +220,7 @@
         .character-grid .drop-indicator {
             position: absolute;
             width: 4px;
-            height: 80px;
+            height: 85px;
             background: #4299e1;
             border-radius: 2px;
             opacity: 0;
@@ -358,6 +372,10 @@
                 min-width: auto;
                 margin-bottom: 5px;
                 font-size: 1rem;
+                position: static;
+                left: auto;
+                top: auto;
+                transform: none;
             }
             
             .deck-slots {
@@ -962,27 +980,62 @@
             const characters = [...targetGrid.children].filter(child => child.classList.contains('character'));
             const rect = targetGrid.getBoundingClientRect();
             
-            let insertIndex = characters.length;
-            let indicatorLeft = 0;
+            // Get grid layout info
+            const gridStyle = window.getComputedStyle(targetGrid);
+            const gap = parseInt(gridStyle.gap) || 12;
+            const padding = parseInt(gridStyle.paddingLeft) || 12;
             
-            for (let i = 0; i < characters.length; i++) {
-                const charRect = characters[i].getBoundingClientRect();
-                const charCenterX = charRect.left + charRect.width / 2;
+            let insertIndex = characters.length;
+            let indicatorLeft = padding;
+            let indicatorTop = padding;
+            
+            // If no characters, place at beginning
+            if (characters.length === 0) {
+                return { index: 0, left: indicatorLeft, top: indicatorTop };
+            }
+            
+            // Find the closest position based on mouse coordinates
+            let minDistance = Infinity;
+            let bestIndex = characters.length;
+            let bestLeft = indicatorLeft;
+            let bestTop = indicatorTop;
+            
+            for (let i = 0; i <= characters.length; i++) {
+                let posLeft, posTop;
                 
-                if (e.clientX < charCenterX) {
-                    insertIndex = i;
-                    indicatorLeft = charRect.left - rect.left - 2;
-                    break;
+                if (i < characters.length) {
+                    const charRect = characters[i].getBoundingClientRect();
+                    posLeft = charRect.left - rect.left;
+                    posTop = charRect.top - rect.top;
+                } else {
+                    // Position after last character
+                    if (characters.length > 0) {
+                        const lastCharRect = characters[characters.length - 1].getBoundingClientRect();
+                        posLeft = lastCharRect.right - rect.left + gap;
+                        posTop = lastCharRect.top - rect.top;
+                        
+                        // Check if we need to wrap to next row
+                        if (posLeft + 85 > targetGrid.clientWidth - padding) {
+                            posLeft = padding;
+                            posTop = lastCharRect.bottom - rect.top + gap;
+                        }
+                    }
+                }
+                
+                const distance = Math.sqrt(
+                    Math.pow(e.clientX - (rect.left + posLeft + 42.5), 2) + 
+                    Math.pow(e.clientY - (rect.top + posTop + 42.5), 2)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    bestIndex = i;
+                    bestLeft = posLeft;
+                    bestTop = posTop;
                 }
             }
             
-            // If last position
-            if (insertIndex === characters.length && characters.length > 0) {
-                const lastCharRect = characters[characters.length - 1].getBoundingClientRect();
-                indicatorLeft = lastCharRect.right - rect.left + 5;
-            }
-            
-            return { index: insertIndex, left: indicatorLeft };
+            return { index: bestIndex, left: bestLeft, top: bestTop };
         }
 
         // Drag start event
@@ -1036,6 +1089,7 @@
                     const indicator = createDropIndicator(targetGrid);
                     const position = getDropPosition(e, targetGrid);
                     indicator.style.left = position.left + 'px';
+                    indicator.style.top = position.top + 'px';
                     indicator.classList.add('show');
                 }
             }
@@ -1120,8 +1174,9 @@
             }
         });
 
-        // Character remove button click
+        // Character click handling
         document.addEventListener('click', function(e) {
+            // Handle click on placed character (X button)
             if (e.target.classList.contains('character') && e.target.classList.contains('placed')) {
                 const rect = e.target.getBoundingClientRect();
                 const clickX = e.clientX - rect.left;
@@ -1137,6 +1192,41 @@
                     slot.classList.remove('occupied');
                     slot.classList.add('empty-slot');
                     return;
+                }
+            }
+            // Handle click on nikke area character (move to candidate)
+            else if (e.target.classList.contains('character') && 
+                     e.target.parentElement.classList.contains('character-grid') &&
+                     e.target.parentElement.parentElement.classList.contains('character-pool')) {
+                e.preventDefault();
+                e.stopPropagation();
+                document.querySelector('#candidateGrid').appendChild(e.target);
+            }
+            // Handle click on candidate area character (auto-place to deck)
+            else if (e.target.classList.contains('character') && 
+                     e.target.parentElement.id === 'candidateGrid') {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Find first available deck slot
+                let targetSlot = null;
+                for (let deckNum = 1; deckNum <= 5; deckNum++) {
+                    for (let slotNum = 0; slotNum < 5; slotNum++) {
+                        const slot = document.querySelector(`[data-deck="${deckNum}"] [data-slot="${slotNum}"]`);
+                        if (slot && slot.children.length === 0) {
+                            targetSlot = slot;
+                            break;
+                        }
+                    }
+                    if (targetSlot) break;
+                }
+                
+                // Place character in first available slot
+                if (targetSlot) {
+                    targetSlot.appendChild(e.target);
+                    targetSlot.classList.add('occupied');
+                    targetSlot.classList.remove('empty-slot');
+                    e.target.classList.add('placed');
                 }
             }
         }, { passive: false });
@@ -1323,17 +1413,12 @@
                         touchTarget.classList.remove('placed');
                     }
                     
-                    // Find insertion point
-                    let insertIndex = characters.length;
-                    for (let i = 0; i < characters.length; i++) {
-                        const charRect = characters[i].getBoundingClientRect();
-                        const charCenterX = charRect.left + charRect.width / 2;
-                        
-                        if (touch.clientX < charCenterX) {
-                            insertIndex = i;
-                            break;
-                        }
-                    }
+                    // Find insertion point using same logic as desktop
+                    const position = getDropPosition({
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    }, grid);
+                    const insertIndex = position.index;
                     
                     // Remove dragged character
                     touchTarget.remove();
