@@ -166,6 +166,25 @@
             padding-top: 20px;
             margin-bottom: 20px;
         }
+        
+        .candidate-pool .character-grid {
+            min-height: 120px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+        }
+        
+        .candidate-pool .character-grid:empty::before {
+            content: '후보 영역 - 니케를 여기로 드래그해주세요';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #a0aec0;
+            font-size: 14px;
+            text-align: center;
+        }
 
         .pool-title {
             text-align: center;
@@ -200,8 +219,8 @@
         }
 
         .character {
-            width: 100px;
-            height: 100px;
+            width: 85px;
+            height: 85px;
             background: white;
             border-radius: 12px;
             display: flex;
@@ -246,26 +265,29 @@
 
         .character.placed {
             position: relative;
+            width: calc(100% - 2px) !important;
+            height: calc(100% - 2px) !important;
+            margin: 1px;
         }
 
         .character.placed::after {
             content: '×';
             position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 20px;
-            height: 20px;
+            top: -3px;
+            right: -3px;
+            width: 16px;
+            height: 16px;
             background: #e53e3e;
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 2px solid white;
+            border: 1px solid white;
             z-index: 20;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
             touch-action: manipulation;
@@ -357,6 +379,17 @@
                 flex-shrink: 0;
             }
             
+            .character {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .character.placed {
+                width: calc(100% - 1px) !important;
+                height: calc(100% - 1px) !important;
+                margin: 0.5px;
+            }
+            
             .controls {
                 gap: 10px;
             }
@@ -376,6 +409,17 @@
                 width: 70px;
                 height: 70px;
                 margin: 6px;
+            }
+            
+            .character {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .character.placed {
+                width: calc(100% - 2px) !important;
+                height: calc(100% - 2px) !important;
+                margin: 1px;
             }
         }
         
@@ -399,6 +443,17 @@
                 height: 60px;
                 margin: 4px;
             }
+            
+            .character {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .character.placed {
+                width: calc(100% - 2px) !important;
+                height: calc(100% - 2px) !important;
+                margin: 1px;
+            }
         }
         
         @media (max-width: 400px) {
@@ -417,12 +472,23 @@
                 margin: 3px;
             }
             
+            .character {
+                width: 55px;
+                height: 55px;
+            }
+            
+            .character.placed {
+                width: calc(100% - 2px) !important;
+                height: calc(100% - 2px) !important;
+                margin: 1px;
+            }
+            
             .character.placed::after {
-                width: 18px;
-                height: 18px;
-                font-size: 12px;
-                top: -8px;
-                right: -8px;
+                width: 14px;
+                height: 14px;
+                font-size: 9px;
+                top: -2px;
+                right: -2px;
             }
         }
         
@@ -431,6 +497,17 @@
                 width: 50px;
                 height: 50px;
                 margin: 2px;
+            }
+            
+            .character {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .character.placed {
+                width: calc(100% - 1px) !important;
+                height: calc(100% - 1px) !important;
+                margin: 0.5px;
             }
             
             .deck-slots {
@@ -535,6 +612,9 @@
                 <div class="character character-043" draggable="true" data-character="043" style="background-image: url('images/si_c043_00_s.webp');"></div>
                 <div class="character character-080" draggable="true" data-character="080" style="background-image: url('images/si_c080_00_s.webp');"></div>
                 <div class="character character-082" draggable="true" data-character="082" style="background-image: url('images/si_c082_00_s.webp');"></div>
+                <div class="character character-093" draggable="true" data-character="093" style="background-image: url('images/si_c093_00_s.webp');"></div>
+                <div class="character character-094" draggable="true" data-character="094" style="background-image: url('images/si_c094_00_s.webp');"></div>
+                <div class="character character-095" draggable="true" data-character="095" style="background-image: url('images/si_c095_00_s.webp');"></div>
                 <div class="character character-100" draggable="true" data-character="100" style="background-image: url('images/si_c100_00_s.webp');"></div>
                 <div class="character character-101" draggable="true" data-character="101" style="background-image: url('images/si_c101_00_s.webp');"></div>
                 <div class="character character-102" draggable="true" data-character="102" style="background-image: url('images/si_c102_00_s.webp');"></div>
@@ -865,20 +945,22 @@
         }
 
         // Create drop indicator function
-        function createDropIndicator() {
+        function createDropIndicator(targetGrid) {
             if (!dropIndicator) {
                 dropIndicator = document.createElement('div');
                 dropIndicator.className = 'drop-indicator';
-                document.querySelector('.character-grid').appendChild(dropIndicator);
+            }
+            // Move indicator to target grid if needed
+            if (dropIndicator.parentElement !== targetGrid) {
+                targetGrid.appendChild(dropIndicator);
             }
             return dropIndicator;
         }
 
         // Calculate drop position in character pool
-        function getDropPosition(e) {
-            const grid = document.querySelector('.character-grid');
-            const characters = [...grid.children].filter(child => child.classList.contains('character'));
-            const rect = grid.getBoundingClientRect();
+        function getDropPosition(e, targetGrid) {
+            const characters = [...targetGrid.children].filter(child => child.classList.contains('character'));
+            const rect = targetGrid.getBoundingClientRect();
             
             let insertIndex = characters.length;
             let indicatorLeft = 0;
@@ -944,14 +1026,15 @@
                 e.preventDefault();
                 e.target.classList.add('drag-over');
             }
-            // Character pool drag over
+            // Character pool drag over (both candidate and main pool)
             else if (e.target.classList.contains('character-grid') || 
                      (e.target.classList.contains('character') && e.target.parentElement.classList.contains('character-grid'))) {
                 e.preventDefault();
                 
                 if (draggedFromPool && draggedElement) {
-                    const indicator = createDropIndicator();
-                    const position = getDropPosition(e);
+                    const targetGrid = e.target.classList.contains('character-grid') ? e.target : e.target.parentElement;
+                    const indicator = createDropIndicator(targetGrid);
+                    const position = getDropPosition(e, targetGrid);
                     indicator.style.left = position.left + 'px';
                     indicator.classList.add('show');
                 }
@@ -1003,24 +1086,32 @@
                     draggedElement.classList.add('placed');
                 }
             }
-            // Drop on character pool
+            // Drop on character pool (both candidate and main pool)
             else if ((e.target.classList.contains('character-grid') || 
                      (e.target.classList.contains('character') && e.target.parentElement.classList.contains('character-grid'))) 
-                     && draggedFromPool && draggedElement) {
+                     && draggedElement) {
                 e.preventDefault();
                 
-                const grid = e.target.classList.contains('character-grid') ? e.target : e.target.parentElement;
-                const characters = [...grid.children].filter(child => child.classList.contains('character'));
-                const position = getDropPosition(e);
+                const targetGrid = e.target.classList.contains('character-grid') ? e.target : e.target.parentElement;
+                const characters = [...targetGrid.children].filter(child => child.classList.contains('character') && child !== draggedElement);
+                const position = getDropPosition(e, targetGrid);
                 
-                // Remove dragged character
+                // If dragging from deck, clear original slot
+                if (draggedFromDeck && draggedFromSlot !== null) {
+                    const originalSlot = document.querySelector(`[data-deck="${draggedFromDeck}"] [data-slot="${draggedFromSlot}"]`);
+                    originalSlot.classList.remove('occupied');
+                    originalSlot.classList.add('empty-slot');
+                    draggedElement.classList.remove('placed');
+                }
+                
+                // Remove dragged character from current position
                 draggedElement.remove();
                 
                 // Insert at new position
                 if (position.index >= characters.length) {
-                    grid.appendChild(draggedElement);
+                    targetGrid.appendChild(draggedElement);
                 } else {
-                    grid.insertBefore(draggedElement, characters[position.index]);
+                    targetGrid.insertBefore(draggedElement, characters[position.index]);
                 }
                 
                 if (dropIndicator) {
@@ -1041,7 +1132,7 @@
                     e.preventDefault();
                     e.stopPropagation();
                     const slot = e.target.parentElement;
-                    document.querySelector('.character-pool .character-grid').appendChild(e.target);
+                    document.querySelector('#candidateGrid').appendChild(e.target);
                     e.target.classList.remove('placed');
                     slot.classList.remove('occupied');
                     slot.classList.add('empty-slot');
@@ -1054,7 +1145,7 @@
         document.addEventListener('dblclick', function(e) {
             if (e.target.classList.contains('character') && e.target.parentElement.classList.contains('deck-slot')) {
                 const slot = e.target.parentElement;
-                document.querySelector('.character-grid').appendChild(e.target);
+                document.querySelector('#candidateGrid').appendChild(e.target);
                 e.target.classList.remove('placed');
                 slot.classList.remove('occupied');
                 slot.classList.add('empty-slot');
@@ -1102,7 +1193,7 @@
                         e.preventDefault();
                         e.stopPropagation();
                         const slot = e.target.parentElement;
-                        document.querySelector('.character-pool .character-grid').appendChild(e.target);
+                        document.querySelector('#candidateGrid').appendChild(e.target);
                         e.target.classList.remove('placed');
                         slot.classList.remove('occupied');
                         slot.classList.add('empty-slot');
@@ -1174,13 +1265,9 @@
                         touchDropTarget = elementBelow.parentElement;
                     } else if (elementBelow && (elementBelow.classList.contains('character-grid') || 
                               (elementBelow.classList.contains('character') && elementBelow.parentElement.classList.contains('character-grid')))) {
-                        // Handle drop on character pools for reordering
-                        if (draggedFromPool) {
-                            const grid = elementBelow.classList.contains('character-grid') ? elementBelow : elementBelow.parentElement;
-                            touchDropTarget = grid;
-                        } else {
-                            touchDropTarget = null;
-                        }
+                        // Handle drop on character pools (candidate and main)
+                        const grid = elementBelow.classList.contains('character-grid') ? elementBelow : elementBelow.parentElement;
+                        touchDropTarget = grid;
                     } else {
                         touchDropTarget = null;
                     }
@@ -1222,11 +1309,19 @@
                     touchDropTarget.classList.add('occupied');
                     touchDropTarget.classList.remove('empty-slot');
                     touchTarget.classList.add('placed');
-                } else if (touchDropTarget.classList.contains('character-grid') && draggedFromPool) {
-                    // Handle reordering within character pools
+                } else if (touchDropTarget.classList.contains('character-grid')) {
+                    // Handle drop on character pools (both candidate and main)
                     const touch = e.changedTouches[0];
                     const grid = touchDropTarget;
-                    const characters = [...grid.children].filter(child => child.classList.contains('character'));
+                    const characters = [...grid.children].filter(child => child.classList.contains('character') && child !== touchTarget);
+                    
+                    // If dragging from deck, clear original slot
+                    if (draggedFromDeck && draggedFromSlot !== null) {
+                        const originalSlot = document.querySelector(`[data-deck="${draggedFromDeck}"] [data-slot="${draggedFromSlot}"]`);
+                        originalSlot.classList.remove('occupied');
+                        originalSlot.classList.add('empty-slot');
+                        touchTarget.classList.remove('placed');
+                    }
                     
                     // Find insertion point
                     let insertIndex = characters.length;
