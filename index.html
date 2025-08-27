@@ -163,6 +163,32 @@
             border: 3px solid #48bb78;
             background: #f0fff4;
         }
+        
+        /* Attribute-based border colors for placed characters */
+        .deck-slot.occupied.attribute-전격 {
+            border: 3px solid #8b5cf6; /* 보라색 */
+            background: #f3f4f6;
+        }
+        
+        .deck-slot.occupied.attribute-작열 {
+            border: 3px solid #ef4444; /* 빨간색 */
+            background: #fef2f2;
+        }
+        
+        .deck-slot.occupied.attribute-철갑 {
+            border: 3px solid #eab308; /* 노란색 */
+            background: #fefce8;
+        }
+        
+        .deck-slot.occupied.attribute-수냉 {
+            border: 3px solid #3b82f6; /* 파란색 */
+            background: #eff6ff;
+        }
+        
+        .deck-slot.occupied.attribute-풍압 {
+            border: 3px solid #48bb78; /* 초록색 (기본) */
+            background: #f0fff4;
+        }
 
         .candidate-pool, .character-pool {
             border-top: 3px solid #e2e8f0;
@@ -718,6 +744,8 @@
         let draggedFromDeck = null;
         let draggedFromSlot = null;
         let draggedFromPool = false;
+        let draggedOriginalParent = null;
+        let draggedPlaceholder = null;
         let dropIndicator = null;
         
         // Touch support variables
@@ -844,7 +872,7 @@
             });
         }
         
-        // Add attribute icon to character
+        // Add attribute icon to character and apply border color if placed
         function addAttributeIcon(character) {
             const characterId = character.dataset.character;
             const attributeType = characterAttributes[characterId];
@@ -862,6 +890,56 @@
                 iconElement.style.backgroundImage = `url('${ATTRIBUTE_ICONS[attributeType]}')`;
                 iconElement.title = attributeType;
                 character.appendChild(iconElement);
+                
+                // Apply attribute border color to deck slot if character is placed
+                if (character.classList.contains('placed')) {
+                    const slot = character.parentElement;
+                    if (slot && slot.classList.contains('deck-slot')) {
+                        // Remove existing attribute classes
+                        slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
+                        // Add current attribute class
+                        slot.classList.add(`attribute-${attributeType}`);
+                    }
+                }
+            }
+        }
+        
+        // Apply attribute border color to slot
+        function applyAttributeBorderColor(slot, character) {
+            const characterId = character.dataset.character;
+            const attributeType = characterAttributes[characterId];
+            
+            if (attributeType) {
+                // Remove existing attribute classes
+                slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
+                // Add current attribute class
+                slot.classList.add(`attribute-${attributeType}`);
+            }
+        }
+        
+        // Helper function to insert character at original position
+        function insertAtOriginalPosition(parent, child, nextSibling) {
+            // If nextSibling is still in DOM and is a child of parent, use it
+            if (nextSibling && nextSibling.parentElement === parent) {
+                parent.insertBefore(child, nextSibling);
+            } else {
+                // Otherwise append to parent
+                parent.appendChild(child);
+            }
+        }
+        
+        // Helper function to get the index of an element in its parent
+        function getElementIndex(element) {
+            return Array.from(element.parentElement.children).indexOf(element);
+        }
+        
+        // Helper function to insert at specific index
+        function insertAtIndex(parent, child, index) {
+            const children = parent.children;
+            if (index >= children.length) {
+                parent.appendChild(child);
+            } else {
+                parent.insertBefore(child, children[index]);
             }
         }
         
@@ -1000,6 +1078,7 @@
                             slot.classList.remove('empty-slot');
                             character.classList.add('placed');
                             addAttributeIcon(character);  // Add attribute icon when placing
+                            applyAttributeBorderColor(slot, character);  // Apply attribute border color
                         }
                     }
                 });
@@ -1115,6 +1194,8 @@
             allSlots.forEach(slot => {
                 slot.classList.remove('occupied');
                 slot.classList.add('empty-slot');
+                // Remove attribute border colors
+                slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
             });
             
             // Clear candidate pool
@@ -1240,6 +1321,14 @@
                 draggedElement = e.target;
                 e.target.classList.add('dragging');
                 
+                // Remember original position for precise swapping
+                draggedOriginalParent = e.target.parentElement;
+                // Create invisible placeholder to mark original position
+                draggedPlaceholder = document.createElement('div');
+                draggedPlaceholder.style.display = 'none';
+                draggedPlaceholder.classList.add('drag-placeholder');
+                e.target.parentElement.insertBefore(draggedPlaceholder, e.target.nextSibling);
+                
                 // Check if dragging from deck slot
                 const parentSlot = e.target.parentElement;
                 if (parentSlot.classList.contains('deck-slot')) {
@@ -1266,6 +1355,12 @@
                 draggedFromDeck = null;
                 draggedFromSlot = null;
                 draggedFromPool = false;
+                draggedOriginalParent = null;
+                // Remove placeholder if exists
+                if (draggedPlaceholder && draggedPlaceholder.parentElement) {
+                    draggedPlaceholder.parentElement.removeChild(draggedPlaceholder);
+                }
+                draggedPlaceholder = null;
             }
         });
 
@@ -1312,29 +1407,51 @@
                         const existingCharacter = e.target.children[0];
                         
                         if (draggedFromDeck && draggedFromSlot !== null) {
-                            // Swap between decks
+                            // Swap between deck slots
                             const originalSlot = document.querySelector(`[data-deck="${draggedFromDeck}"] [data-slot="${draggedFromSlot}"]`);
+                            
+                            // Remove existing character from target slot and clear its styling
+                            existingCharacter.classList.remove('placed');
+                            e.target.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
+                            e.target.classList.add('empty-slot');
+                            
+                            // Place existing character in original slot
                             originalSlot.appendChild(existingCharacter);
                             originalSlot.classList.add('occupied');
                             originalSlot.classList.remove('empty-slot');
+                            existingCharacter.classList.add('placed');
+                            addAttributeIcon(existingCharacter);
+                            applyAttributeBorderColor(originalSlot, existingCharacter);
                         } else {
-                            // Return to main character pool
-                            document.querySelector('.character-pool .character-grid').appendChild(existingCharacter);
+                            // Dragging from candidate or main pool to occupied deck slot
+                            // Remove existing character and send it to dragged element's original position
                             existingCharacter.classList.remove('placed');
+                            e.target.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
+                            e.target.classList.add('empty-slot');
+                            
+                            // Place existing character at the exact original position of dragged element
+                            if (draggedPlaceholder && draggedPlaceholder.parentElement) {
+                                draggedPlaceholder.parentElement.insertBefore(existingCharacter, draggedPlaceholder);
+                                draggedPlaceholder.parentElement.removeChild(draggedPlaceholder);
+                                draggedPlaceholder = null;
+                            } else {
+                                draggedOriginalParent.appendChild(existingCharacter);
+                            }
                         }
                     } else if (draggedFromDeck && draggedFromSlot !== null) {
-                        // Clear original slot
+                        // Moving from deck to empty deck slot - clear original slot
                         const originalSlot = document.querySelector(`[data-deck="${draggedFromDeck}"] [data-slot="${draggedFromSlot}"]`);
-                        originalSlot.classList.remove('occupied');
+                        originalSlot.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
                         originalSlot.classList.add('empty-slot');
                     }
                     
-                    // Place character in new position
+                    // Place dragged character in target slot
                     e.target.appendChild(draggedElement);
                     e.target.classList.add('occupied');
                     e.target.classList.remove('empty-slot');
                     draggedElement.classList.add('placed');
                     addAttributeIcon(draggedElement);  // Add attribute icon when placing
+                    applyAttributeBorderColor(e.target, draggedElement);  // Apply attribute border color
                 }
             }
             // Drop on character pool (both candidate and main pool)
@@ -1388,6 +1505,8 @@
                     e.target.classList.remove('placed');
                     slot.classList.remove('occupied');
                     slot.classList.add('empty-slot');
+                    // Remove attribute border color
+                    slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
                     return;
                 }
             }
@@ -1425,6 +1544,7 @@
                     targetSlot.classList.remove('empty-slot');
                     e.target.classList.add('placed');
                     addAttributeIcon(e.target);  // Add attribute icon when placing
+                    applyAttributeBorderColor(targetSlot, e.target);  // Apply attribute border color
                 }
             }
         }, { passive: false });
@@ -1437,6 +1557,8 @@
                 e.target.classList.remove('placed');
                 slot.classList.remove('occupied');
                 slot.classList.add('empty-slot');
+                // Remove attribute border color
+                slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
             }
         });
 
@@ -1485,6 +1607,8 @@
                         e.target.classList.remove('placed');
                         slot.classList.remove('occupied');
                         slot.classList.add('empty-slot');
+                        // Remove attribute border color
+                        slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
                         return;
                     }
                 }
@@ -1499,6 +1623,15 @@
                 
                 // Set up dragging state
                 draggedElement = e.target;
+                
+                // Remember original position for precise swapping
+                draggedOriginalParent = e.target.parentElement;
+                // Create invisible placeholder to mark original position
+                draggedPlaceholder = document.createElement('div');
+                draggedPlaceholder.style.display = 'none';
+                draggedPlaceholder.classList.add('drag-placeholder');
+                e.target.parentElement.insertBefore(draggedPlaceholder, e.target.nextSibling);
+                
                 const parentSlot = e.target.parentElement;
                 if (parentSlot.classList.contains('deck-slot')) {
                     draggedFromDeck = parentSlot.parentElement.dataset.deck;
@@ -1575,29 +1708,51 @@
                         const existingCharacter = touchDropTarget.children[0];
                         
                         if (draggedFromDeck && draggedFromSlot !== null) {
-                            // Swap between decks
+                            // Swap between deck slots
                             const originalSlot = document.querySelector(`[data-deck="${draggedFromDeck}"] [data-slot="${draggedFromSlot}"]`);
+                            
+                            // Remove existing character from target slot and clear its styling
+                            existingCharacter.classList.remove('placed');
+                            touchDropTarget.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
+                            touchDropTarget.classList.add('empty-slot');
+                            
+                            // Place existing character in original slot
                             originalSlot.appendChild(existingCharacter);
                             originalSlot.classList.add('occupied');
                             originalSlot.classList.remove('empty-slot');
+                            existingCharacter.classList.add('placed');
+                            addAttributeIcon(existingCharacter);
+                            applyAttributeBorderColor(originalSlot, existingCharacter);
                         } else {
-                            // Return to main character pool
-                            document.querySelector('.character-pool .character-grid').appendChild(existingCharacter);
+                            // Dragging from candidate or main pool to occupied deck slot
+                            // Remove existing character and send it to dragged element's original position
                             existingCharacter.classList.remove('placed');
+                            touchDropTarget.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
+                            touchDropTarget.classList.add('empty-slot');
+                            
+                            // Place existing character at the exact original position of dragged element
+                            if (draggedPlaceholder && draggedPlaceholder.parentElement) {
+                                draggedPlaceholder.parentElement.insertBefore(existingCharacter, draggedPlaceholder);
+                                draggedPlaceholder.parentElement.removeChild(draggedPlaceholder);
+                                draggedPlaceholder = null;
+                            } else {
+                                draggedOriginalParent.appendChild(existingCharacter);
+                            }
                         }
                     } else if (draggedFromDeck && draggedFromSlot !== null) {
-                        // Clear original slot
+                        // Moving from deck to empty deck slot - clear original slot
                         const originalSlot = document.querySelector(`[data-deck="${draggedFromDeck}"] [data-slot="${draggedFromSlot}"]`);
-                        originalSlot.classList.remove('occupied');
+                        originalSlot.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
                         originalSlot.classList.add('empty-slot');
                     }
                     
-                    // Place character in new position
+                    // Place dragged character in target slot
                     touchDropTarget.appendChild(touchTarget);
                     touchDropTarget.classList.add('occupied');
                     touchDropTarget.classList.remove('empty-slot');
                     touchTarget.classList.add('placed');
                     addAttributeIcon(touchTarget);  // Add attribute icon when placing
+                    applyAttributeBorderColor(touchDropTarget, touchTarget);  // Apply attribute border color
                 } else if (touchDropTarget.classList.contains('character-grid')) {
                     // Handle drop on character pools (both candidate and main)
                     const touch = e.changedTouches[0];
@@ -1650,6 +1805,12 @@
             draggedFromDeck = null;
             draggedFromSlot = null;
             draggedFromPool = false;
+            draggedOriginalParent = null;
+            // Remove placeholder if exists
+            if (draggedPlaceholder && draggedPlaceholder.parentElement) {
+                draggedPlaceholder.parentElement.removeChild(draggedPlaceholder);
+            }
+            draggedPlaceholder = null;
         }, { passive: false });
     </script>
 </body>
