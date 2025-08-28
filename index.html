@@ -286,33 +286,6 @@
             margin: 1px;
         }
 
-        .character.placed::after {
-            content: '×';
-            position: absolute;
-            top: -3px;
-            right: -3px;
-            width: 16px;
-            height: 16px;
-            background: #e53e3e;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid white;
-            z-index: 20;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-            touch-action: manipulation;
-        }
-
-        .character.placed::after:hover {
-            background: #c53030;
-            transform: scale(1.1);
-        }
         
         /* Attribute icon styles - only for character elements */
         .character .attribute-icon {
@@ -549,13 +522,6 @@
                 margin: 1px;
             }
             
-            .character.placed::after {
-                width: 14px;
-                height: 14px;
-                font-size: 9px;
-                top: -2px;
-                right: -2px;
-            }
         }
         
         @media (max-width: 350px) {
@@ -771,6 +737,11 @@
         let touchDropTarget = null;
         let dragGhost = null;
         
+        // Click vs Drag detection variables
+        let mouseDownTime = 0;
+        let mouseDownPos = null;
+        let isDragging = false;
+        
         // Attribute mapping (Korean to icon)
         const ATTRIBUTE_ICONS = {
             '전격': 'images/icon-code-electronic.webp',
@@ -869,7 +840,7 @@
             '834': { name: '', subName: '풍레이', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
             '835': { name: '', subName: '풍스카', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
             '850': { name: '', subName: '이브', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
-            '851': { name: '', subName: '레이븐', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '851': { name: '', subName: '레이븐', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' }
         };
         
         // Store character attributes (extracted from CHARACTER_DATA)
@@ -1378,6 +1349,7 @@
         // Drag start event
         document.addEventListener('dragstart', function(e) {
             if (e.target.classList.contains('character')) {
+                isDragging = true;  // Mark as dragging to prevent click handling
                 draggedElement = e.target;
                 e.target.classList.add('dragging');
                 
@@ -1548,27 +1520,48 @@
             }
         });
 
-        // Character click handling
-        document.addEventListener('click', function(e) {
-            // Handle click on placed character (X button)
-            if (e.target.classList.contains('character') && e.target.classList.contains('placed')) {
-                const rect = e.target.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const clickY = e.clientY - rect.top;
+        // Mouse down event to track click start
+        document.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('character')) {
+                mouseDownTime = Date.now();
+                mouseDownPos = { x: e.clientX, y: e.clientY };
+                isDragging = false;
+            }
+        });
+
+        // Mouse up event to handle clicks vs drags
+        document.addEventListener('mouseup', function(e) {
+            if (e.target.classList.contains('character') && mouseDownTime > 0) {
+                const timeDiff = Date.now() - mouseDownTime;
+                const pos = { x: e.clientX, y: e.clientY };
+                const distance = mouseDownPos ? 
+                    Math.sqrt(Math.pow(pos.x - mouseDownPos.x, 2) + Math.pow(pos.y - mouseDownPos.y, 2)) : 0;
                 
-                // Check if clicking on remove button area (top-right)
-                if (clickX > rect.width - 28 && clickY < 28) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const slot = e.target.parentElement;
-                    document.querySelector('#candidateGrid').appendChild(e.target);
-                    e.target.classList.remove('placed');
-                    slot.classList.remove('occupied');
-                    slot.classList.add('empty-slot');
-                    // Remove attribute border color
-                    slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
-                    return;
+                // Consider it a click if: time < 200ms AND distance < 5px AND not dragging
+                if (timeDiff < 200 && distance < 5 && !isDragging) {
+                    handleCharacterClick(e);
                 }
+                
+                mouseDownTime = 0;
+                mouseDownPos = null;
+                isDragging = false;
+            }
+        });
+
+        // Character click handling function
+        function handleCharacterClick(e) {
+            // Handle click on placed character (unplace)
+            if (e.target.classList.contains('character') && e.target.classList.contains('placed')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const slot = e.target.parentElement;
+                document.querySelector('#candidateGrid').appendChild(e.target);
+                e.target.classList.remove('placed');
+                slot.classList.remove('occupied');
+                slot.classList.add('empty-slot');
+                // Remove attribute border color
+                slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
+                return;
             }
             // Handle click on nikke area character (move to candidate)
             else if (e.target.classList.contains('character') && 
@@ -1607,20 +1600,8 @@
                     applyAttributeBorderColor(targetSlot, e.target);  // Apply attribute border color
                 }
             }
-        }, { passive: false });
+        }
 
-        // Double-click to return character to pool
-        document.addEventListener('dblclick', function(e) {
-            if (e.target.classList.contains('character') && e.target.parentElement.classList.contains('deck-slot')) {
-                const slot = e.target.parentElement;
-                document.querySelector('#candidateGrid').appendChild(e.target);
-                e.target.classList.remove('placed');
-                slot.classList.remove('occupied');
-                slot.classList.add('empty-slot');
-                // Remove attribute border color
-                slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
-            }
-        });
 
         // Create drag ghost function
         function createDragGhost(element) {
@@ -1652,31 +1633,11 @@
         // Touch events for mobile drag and drop  
         document.addEventListener('touchstart', function(e) {
             if (e.target.classList.contains('character')) {
-                // Check if touching the remove button area for placed characters
-                if (e.target.classList.contains('placed')) {
-                    const rect = e.target.getBoundingClientRect();
-                    const touchX = e.touches[0].clientX - rect.left;
-                    const touchY = e.touches[0].clientY - rect.top;
-                    
-                    // If touching remove button area, handle removal
-                    if (touchX > rect.width - 28 && touchY < 28) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const slot = e.target.parentElement;
-                        document.querySelector('#candidateGrid').appendChild(e.target);
-                        e.target.classList.remove('placed');
-                        slot.classList.remove('occupied');
-                        slot.classList.add('empty-slot');
-                        // Remove attribute border color
-                        slot.classList.remove('attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
-                        return;
-                    }
-                }
-                
                 e.preventDefault();
                 touchStartPos = {
                     x: e.touches[0].clientX,
-                    y: e.touches[0].clientY
+                    y: e.touches[0].clientY,
+                    time: Date.now()
                 };
                 touchTarget = e.target;
                 isTouchDragging = false;
@@ -1757,11 +1718,25 @@
         }, { passive: false });
 
         document.addEventListener('touchend', function(e) {
-            if (isTouchDragging && touchTarget && touchDropTarget) {
-                e.preventDefault();
+            if (touchTarget && touchStartPos) {
+                const touch = e.changedTouches[0];
+                const timeDiff = Date.now() - touchStartPos.time;
+                const distance = Math.sqrt(
+                    Math.pow(touch.clientX - touchStartPos.x, 2) + 
+                    Math.pow(touch.clientY - touchStartPos.y, 2)
+                );
                 
-                // Perform drop operation
-                if (touchDropTarget.classList.contains('deck-slot')) {
+                // Handle as click if: short time, small distance, and not dragging
+                if (timeDiff < 200 && distance < 10 && !isTouchDragging) {
+                    e.preventDefault();
+                    handleCharacterClick({ target: touchTarget, preventDefault: () => {}, stopPropagation: () => {} });
+                }
+                // Handle as drag drop
+                else if (isTouchDragging && touchDropTarget) {
+                    e.preventDefault();
+                    
+                    // Perform drop operation
+                    if (touchDropTarget.classList.contains('deck-slot')) {
                     // Check if slot already has character
                     if (touchDropTarget.children.length > 0) {
                         // Swap characters
@@ -1846,7 +1821,7 @@
                 }
             }
             
-            // Clean up
+            // Clean up - always execute regardless of if conditions above
             if (touchTarget) {
                 touchTarget.classList.remove('dragging');
             }
@@ -1871,6 +1846,7 @@
                 draggedPlaceholder.parentElement.removeChild(draggedPlaceholder);
             }
             draggedPlaceholder = null;
+            }
         }, { passive: false });
     </script>
 </body>
