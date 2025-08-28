@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>니케 덱 메이커</title>
+    <title>NIKKE 덱 메이커</title>
+    
+    <!-- Favicon using SVG with emoji -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='white'/><text x='50' y='70' font-size='70' text-anchor='middle'>🎮</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='white'/><text x='50' y='70' font-size='70' text-anchor='middle'>🎮</text></svg>">
     <style>
         * {
             margin: 0;
@@ -168,7 +172,7 @@
         .candidate-pool, .character-pool {
             border-top: 3px solid #e2e8f0;
             padding-top: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
         
         .candidate-pool .character-grid, .character-pool .character-grid {
@@ -201,12 +205,74 @@
             text-align: center;
         }
 
-        .pool-title {
-            text-align: center;
-            font-weight: bold;
+        .pool-title-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 15px;
+            position: relative;
+        }
+
+        .pool-title {
+            font-weight: bold;
             color: #4a5568;
             font-size: 1.2rem;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .burst-filters {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .burst-filter-btn {
+            position: relative;
+            width: 40px;
+            height: 32px;
+            background: rgb(49, 49, 49);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .burst-filter-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Active state for filter buttons */
+        .burst-filter-btn.active {
+            background: rgb(0, 173, 254);
+        }
+
+        /* Filter burst icons */
+        .filter-burst-icon {
+            width: 18px;
+            height: 18px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* Set background images for each filter button */
+        .burst-filter-btn[data-burst="1"] .filter-burst-icon {
+            background-image: url('images/icon-burst-1.webp');
+        }
+
+        .burst-filter-btn[data-burst="2"] .filter-burst-icon {
+            background-image: url('images/icon-burst-2.webp');
+        }
+
+        .burst-filter-btn[data-burst="3"] .filter-burst-icon {
+            background-image: url('images/icon-burst-3.webp');
         }
 
         .character-grid {
@@ -550,7 +616,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎮 니케 덱 메이커</h1>
+        <h1>🎮 NIKKE 덱 메이커</h1>
         
         <div class="controls">
             <button class="control-btn share-btn" onclick="shareConfiguration()">
@@ -619,15 +685,26 @@
             </div>
         </div>
         
-        <div class="candidate-pool">
-            <div class="pool-title">🎯 후보</div>
+        <div class="candidate-pool">            
             <div class="character-grid" id="candidateGrid">
                 <!-- Candidate characters will be populated dynamically -->
             </div>
         </div>
         
         <div class="character-pool">
-            <div class="pool-title">🎯 니케</div>
+            <div class="pool-title-container">
+                <div class="burst-filters">
+                    <button class="burst-filter-btn" data-burst="1" onclick="toggleBurstFilter(1)">
+                        <div class="filter-burst-icon"></div>
+                    </button>
+                    <button class="burst-filter-btn" data-burst="2" onclick="toggleBurstFilter(2)">
+                        <div class="filter-burst-icon"></div>
+                    </button>
+                    <button class="burst-filter-btn" data-burst="3" onclick="toggleBurstFilter(3)">
+                        <div class="filter-burst-icon"></div>
+                    </button>
+                </div>
+            </div>
             <div class="character-grid">
                 <div class="character character-015" draggable="true" data-character="015" style="background-image: url('images/si_c015_00_s.webp');"></div>
                 <div class="character character-016" draggable="true" data-character="016" style="background-image: url('images/si_c016_00_s.webp');"></div>
@@ -741,6 +818,9 @@
         let mouseDownTime = 0;
         let mouseDownPos = null;
         let isDragging = false;
+        
+        // Burst filter state
+        let activeBurstFilters = new Set(); // Empty set means show all
         
         // Attribute mapping (Korean to icon)
         const ATTRIBUTE_ICONS = {
@@ -1848,6 +1928,59 @@
             draggedPlaceholder = null;
             }
         }, { passive: false });
+
+        // Burst filter functions
+        function toggleBurstFilter(burstNumber) {
+            const filterBtn = document.querySelector(`.burst-filter-btn[data-burst="${burstNumber}"]`);
+            
+            if (activeBurstFilters.has(burstNumber.toString())) {
+                // Remove from active filters
+                activeBurstFilters.delete(burstNumber.toString());
+                filterBtn.classList.remove('active');
+            } else {
+                // Add to active filters
+                activeBurstFilters.add(burstNumber.toString());
+                filterBtn.classList.add('active');
+            }
+            
+            // Apply filter
+            applyBurstFilter();
+        }
+
+        function applyBurstFilter() {
+            const allCharacters = document.querySelectorAll('.character-pool .character-grid .character');
+            
+            allCharacters.forEach(character => {
+                const characterId = character.dataset.character;
+                const characterData = CHARACTER_DATA[characterId];
+                
+                if (!characterData) {
+                    character.style.display = 'flex'; // Show characters without data
+                    return;
+                }
+                
+                const burstType = characterData.burst;
+                
+                // If no filters active, show all characters
+                if (activeBurstFilters.size === 0) {
+                    character.style.display = 'flex';
+                }
+                // If filters active, show only matching burst types
+                else if (activeBurstFilters.has(burstType)) {
+                    character.style.display = 'flex';
+                }
+                // Hide non-matching characters
+                else {
+                    character.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize filters on page load
+        window.addEventListener('load', function() {
+            // Apply initial filter state (show all)
+            applyBurstFilter();
+        });
     </script>
 </body>
 </html>
