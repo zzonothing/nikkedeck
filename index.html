@@ -53,7 +53,7 @@
             font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
         }
 
         .control-btn:hover {
@@ -80,7 +80,7 @@
         .deck-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px;
             margin-bottom: 30px;
             align-items: center;
         }
@@ -107,7 +107,7 @@
 
         .deck-slots {
             display: flex;
-            gap: 5px;
+            gap: 3px;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -125,7 +125,7 @@
             cursor: pointer;
             position: relative;
             overflow: visible;
-            margin: 6px;
+            margin: 3px;
         }
 
         .deck-slot.drag-over {
@@ -212,10 +212,10 @@
         .character-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 12px;
+            gap: 6px;
             justify-items: center;
             position: relative;
-            padding: 12px;
+            padding: 8px;
         }
 
         .character-grid .drop-indicator {
@@ -327,6 +327,55 @@
             z-index: 10;
         }
 
+        /* Burst icon styles - only for character elements */
+        .character .burst-icon {
+            position: absolute;
+            top: 22px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            z-index: 12;
+        }
+
+        /* White hexagon background (outer border) - rotated 90 degrees (pointed top/bottom) */
+        .character .burst-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            background: white;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            z-index: 11;
+        }
+
+        /* Black hexagon background (inner) */
+        .character .burst-icon .inner-hex {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 16px;
+            height: 16px;
+            background: black;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            z-index: 12;
+        }
+
+        /* Burst image on top of hexagon */
+        .character .burst-icon::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 10px;
+            height: 10px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 13;
+        }
+
         .empty-slot::before {
             content: '+';
             font-size: 24px;
@@ -380,19 +429,19 @@
             .deck-slots {
                 justify-content: center;
                 flex-wrap: nowrap;
-                gap: 6px;
+                gap: 3px;
                 overflow-x: auto;
             }
             
             .character-grid {
                 grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-                gap: 8px;
+                gap: 4px;
             }
             
             .character, .deck-slot {
                 width: 80px;
                 height: 80px;
-                margin: 8px;
+                margin: 2px;
                 flex-shrink: 0;
             }
             
@@ -425,7 +474,7 @@
             .character, .deck-slot {
                 width: 70px;
                 height: 70px;
-                margin: 6px;
+                margin: 3px;
             }
             
             .character {
@@ -452,13 +501,13 @@
             
             .character-grid {
                 grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-                gap: 6px;
+                gap: 3px;
             }
             
             .character, .deck-slot {
                 width: 60px;
                 height: 60px;
-                margin: 4px;
+                margin: 2px;
             }
             
             .character {
@@ -733,94 +782,94 @@
         
         // CHARACTER DATA - 여기에서 캐릭터별 정보를 설정하세요
         const CHARACTER_DATA = {
-            '015': { name: '아니스 : 스파클링 서머', subName: '수니스', attribute: '전격', rarity: 'SSR', manufacturer: '테트라', class: '지원형', weapon: 'SG' },
-            '016': { name: '라피 : 레드 후드', subName: '라피', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '030': { name: '폴리', subName: '폴리', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '032': { name: '미란다', subName: '미란다', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '043': { name: 'D : 킬러 와이프', subName: '동디', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '080': { name: '', subName: '센티', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '082': { name: '', subName: '리타', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '093': { name: '', subName: '엠마', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '094': { name: '', subName: '베스티', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '095': { name: '', subName: '은화', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '100': { name: '', subName: '라플라스', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '101': { name: '', subName: '드레이크', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '102': { name: '', subName: '맥스웰', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '112': { name: '', subName: '바이퍼', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '121': { name: '', subName: '클앤', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '132': { name: '', subName: '수어리', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '162': { name: '', subName: '미하라', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '170': { name: '', subName: '프리바티', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '171': { name: '', subName: '율하', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '172': { name: '', subName: '애드미', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '180': { name: '', subName: '길로틴', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '182': { name: '', subName: '클로틴', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '183': { name: '', subName: '클이든', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '191': { name: '', subName: '앨리스', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '192': { name: '', subName: '토브', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '194': { name: '', subName: '클루드', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '195': { name: '', subName: '바리스', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '202': { name: '', subName: '도라', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '210': { name: '', subName: '엑시아', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '212': { name: '', subName: '노벨', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '220': { name: '', subName: '스노우화이트', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '221': { name: '', subName: '라푼젤', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '222': { name: '', subName: '홍련', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '224': { name: '', subName: '애기스화', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '225': { name: '', subName: '흑영', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '231': { name: '', subName: '이사벨', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '232': { name: '', subName: '노아', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '233': { name: '', subName: '도로시', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '234': { name: '', subName: '수로시', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '260': { name: '', subName: '모더니아', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '270': { name: '', subName: '블랑', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '271': { name: '', subName: '누아르', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '272': { name: '', subName: '루주', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '283': { name: '', subName: '수산나', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '284': { name: '', subName: '수쿠라', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '290': { name: '', subName: '마나', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '310': { name: '', subName: '에이드', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '312': { name: '', subName: '소다', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '313': { name: '', subName: '메프바', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '314': { name: '', subName: '바소다', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '321': { name: '', subName: '마르차나', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '330': { name: '', subName: '크라운', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '352': { name: '', subName: '헬름', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '353': { name: '', subName: '수헬름', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '354': { name: '', subName: '메스트', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '355': { name: '', subName: '멩커', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '381': { name: '', subName: '비스킷', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '382': { name: '', subName: '레오나', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '391': { name: '', subName: '아인', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '400': { name: '', subName: '길티', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '403': { name: '', subName: '퀀시', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '412': { name: '', subName: '트리나', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '430': { name: '', subName: '노이즈', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '431': { name: '', subName: '볼륨', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '450': { name: '', subName: '나가', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '451': { name: '', subName: '티아', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '470': { name: '', subName: '레드후드', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '500': { name: '', subName: '일레그', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '502': { name: '', subName: '수레그', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '511': { name: '', subName: '신데렐라', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '513': { name: '', subName: '세이렌', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '514': { name: '', subName: '그레이브', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '520': { name: '', subName: '브래디', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '521': { name: '', subName: '크러스트', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '551': { name: '', subName: '클레이', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '580': { name: '', subName: '팬텀', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '581': { name: '', subName: '아르카나', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '810': { name: '', subName: '2B', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '811': { name: '', subName: 'A2', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '820': { name: '', subName: '렘', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '821': { name: '', subName: '에밀리아', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '830': { name: '', subName: '작스카', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '831': { name: '', subName: '작레이', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '832': { name: '', subName: '마리', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '834': { name: '', subName: '풍레이', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '835': { name: '', subName: '풍스카', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '850': { name: '', subName: '이브', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
-            '851': { name: '', subName: '레이븐', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '' },
+            '015': { name: '아니스 : 스파클링 서머', subName: '수니스', attribute: '전격', rarity: 'SSR', manufacturer: '테트라', class: '지원형', weapon: 'SG', burst: '3' },
+            '016': { name: '라피 : 레드 후드', subName: '라피', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '030': { name: '폴리', subName: '폴리', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '032': { name: '미란다', subName: '미란다', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '043': { name: 'D : 킬러 와이프', subName: '동디', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '080': { name: '', subName: '센티', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '082': { name: '', subName: '리타', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '093': { name: '', subName: '엠마', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '094': { name: '', subName: '베스티', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '095': { name: '', subName: '은화', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '100': { name: '', subName: '라플라스', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '101': { name: '', subName: '드레이크', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '102': { name: '', subName: '맥스웰', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '112': { name: '', subName: '바이퍼', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '121': { name: '', subName: '클앤', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '132': { name: '', subName: '수어리', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '162': { name: '', subName: '미하라', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '170': { name: '', subName: '프리바티', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '171': { name: '', subName: '율하', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '172': { name: '', subName: '애드미', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '180': { name: '', subName: '길로틴', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '182': { name: '', subName: '클로틴', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '183': { name: '', subName: '클이든', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '191': { name: '', subName: '앨리스', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '192': { name: '', subName: '토브', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '194': { name: '', subName: '클루드', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '195': { name: '', subName: '바리스', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '202': { name: '', subName: '도라', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '210': { name: '', subName: '엑시아', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '212': { name: '', subName: '노벨', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '220': { name: '', subName: '스노우화이트', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '221': { name: '', subName: '라푼젤', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '222': { name: '', subName: '홍련', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '224': { name: '', subName: '애기스화', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '225': { name: '', subName: '흑영', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '231': { name: '', subName: '이사벨', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '232': { name: '', subName: '노아', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '233': { name: '', subName: '도로시', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '234': { name: '', subName: '수로시', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '260': { name: '', subName: '모더니아', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '270': { name: '', subName: '블랑', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '271': { name: '', subName: '누아르', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '272': { name: '', subName: '루주', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '283': { name: '', subName: '수산나', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '284': { name: '', subName: '수쿠라', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '290': { name: '', subName: '마나', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '310': { name: '', subName: '에이드', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '312': { name: '', subName: '소다', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '313': { name: '', subName: '메프바', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '314': { name: '', subName: '바소다', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '321': { name: '', subName: '마르차나', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '330': { name: '', subName: '크라운', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '352': { name: '', subName: '헬름', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '353': { name: '', subName: '수헬름', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '354': { name: '', subName: '메스트', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '355': { name: '', subName: '멩커', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '381': { name: '', subName: '비스킷', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '382': { name: '', subName: '레오나', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '391': { name: '', subName: '아인', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '400': { name: '', subName: '길티', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '403': { name: '', subName: '퀀시', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '412': { name: '', subName: '트리나', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '430': { name: '', subName: '노이즈', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '431': { name: '', subName: '볼륨', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '450': { name: '', subName: '나가', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '451': { name: '', subName: '티아', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '470': { name: '', subName: '레드후드', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '500': { name: '', subName: '일레그', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '502': { name: '', subName: '수레그', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '511': { name: '', subName: '신데렐라', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '513': { name: '', subName: '세이렌', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
+            '514': { name: '', subName: '그레이브', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '520': { name: '', subName: '브래디', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '521': { name: '', subName: '크러스트', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '551': { name: '', subName: '클레이', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '580': { name: '', subName: '팬텀', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '581': { name: '', subName: '아르카나', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '810': { name: '', subName: '2B', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '811': { name: '', subName: 'A2', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '820': { name: '', subName: '렘', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '821': { name: '', subName: '에밀리아', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '830': { name: '', subName: '작스카', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '831': { name: '', subName: '작레이', attribute: '작열', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '832': { name: '', subName: '마리', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
+            '834': { name: '', subName: '풍레이', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '835': { name: '', subName: '풍스카', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '850': { name: '', subName: '이브', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+            '851': { name: '', subName: '레이븐', attribute: '철갑', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
         };
         
         // Store character attributes (extracted from CHARACTER_DATA)
@@ -839,11 +888,17 @@
             });
         }
         
-        // Add attribute icon to character and apply border color if placed
+        // Add attribute and burst icons to character and apply border color if placed
         function addAttributeIcon(character) {
             const characterId = character.dataset.character;
-            const attributeType = characterAttributes[characterId];
+            const characterData = CHARACTER_DATA[characterId];
             
+            if (!characterData) return;
+            
+            const attributeType = characterData.attribute;
+            const burstType = characterData.burst;
+            
+            // Handle attribute icon
             if (attributeType && ATTRIBUTE_ICONS[attributeType]) {
                 // Remove existing attribute icon if any
                 const existingIcon = character.querySelector('.attribute-icon');
@@ -867,6 +922,59 @@
                         // Add current attribute class
                         slot.classList.add(`attribute-${attributeType}`);
                     }
+                }
+            }
+            
+            // Handle burst icon
+            if (burstType === '1' || burstType === '2' || burstType === '3') {
+                // Remove existing burst icon if any
+                const existingBurstIcon = character.querySelector('.burst-icon');
+                if (existingBurstIcon) {
+                    existingBurstIcon.remove();
+                }
+                
+                // Create and add new burst icon with hexagon background
+                const burstElement = document.createElement('div');
+                burstElement.className = 'burst-icon';
+                burstElement.title = `Burst ${burstType}`;
+                
+                // Create inner black hexagon
+                const innerHex = document.createElement('div');
+                innerHex.className = 'inner-hex';
+                burstElement.appendChild(innerHex);
+                
+                // Create a style element for the ::after pseudo-element
+                const burstImageUrl = `url('images/icon-burst-${burstType}.webp')`;
+                
+                // Set a data attribute to identify this specific burst icon
+                const burstId = `burst-${characterId}-${Date.now()}`;
+                burstElement.setAttribute('data-burst-id', burstId);
+                
+                // Create dynamic CSS for this specific burst icon
+                const style = document.createElement('style');
+                style.textContent = `
+                    .burst-icon[data-burst-id="${burstId}"]::after {
+                        background-image: ${burstImageUrl} !important;
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                character.appendChild(burstElement);
+            } else {
+                // Remove burst icon if burst type is not 1, 2, or 3
+                const existingBurstIcon = character.querySelector('.burst-icon');
+                if (existingBurstIcon) {
+                    // Remove associated style element
+                    const burstId = existingBurstIcon.getAttribute('data-burst-id');
+                    if (burstId) {
+                        const styles = document.querySelectorAll('style');
+                        styles.forEach(style => {
+                            if (style.textContent.includes(burstId)) {
+                                style.remove();
+                            }
+                        });
+                    }
+                    existingBurstIcon.remove();
                 }
             }
         }
