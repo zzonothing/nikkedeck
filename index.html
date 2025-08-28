@@ -76,31 +76,6 @@
             color: white;
         }
 
-        .url-display {
-            margin-top: 10px;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 8px;
-            border: 2px solid #e2e8f0;
-            font-family: monospace;
-            word-break: break-all;
-            display: none;
-        }
-
-        .url-display.show {
-            display: block;
-        }
-
-        .copy-url-btn {
-            margin-top: 10px;
-            background: linear-gradient(45deg, #48bb78, #68d391);
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-        }
 
         .deck-container {
             display: flex;
@@ -569,16 +544,8 @@
             <button class="control-btn clear-btn" onclick="clearAllDecks()">
                 🗑️ 전체 초기화
             </button>
-            <button class="control-btn load-btn" onclick="loadFromUrl()">
-                📥 URL로 불러오기
-            </button>
         </div>
         
-        <div class="url-display" id="urlDisplay">
-            <div>공유 URL이 생성되었습니다:</div>
-            <div id="shareUrl" style="margin: 10px 0; font-weight: bold;"></div>
-            <button class="copy-url-btn" onclick="copyToClipboard()">📋 URL 복사</button>
-        </div>
         
         <div class="deck-container">
             <div class="deck">
@@ -1124,59 +1091,35 @@
         }
 
         // Share configuration function
-        function shareConfiguration() {
+        async function shareConfiguration() {
             const encodedConfig = encodeConfiguration();
-            const baseUrl = window.location.origin + window.location.pathname;
+            let baseUrl;
+            
+            // Handle both local file and web server scenarios
+            if (window.location.protocol === 'file:') {
+                baseUrl = window.location.href.split('?')[0];
+            } else {
+                baseUrl = window.location.origin + window.location.pathname;
+            }
+            
             const shareUrl = `${baseUrl}?config=${encodedConfig}`;
             
-            document.getElementById('shareUrl').textContent = shareUrl;
-            document.getElementById('urlDisplay').classList.add('show');
-            
-            showNotification('공유 URL이 생성되었습니다!');
-        }
-
-        // Copy to clipboard function
-        async function copyToClipboard() {
-            const urlText = document.getElementById('shareUrl').textContent;
+            // Automatically copy to clipboard
             try {
-                await navigator.clipboard.writeText(urlText);
-                showNotification('URL이 클립보드에 복사되었습니다!');
+                await navigator.clipboard.writeText(shareUrl);
+                showNotification('덱 공유 URL이 클립보드에 복사되었습니다!');
             } catch (err) {
                 // Fallback for browsers without clipboard API support
                 const textArea = document.createElement('textarea');
-                textArea.value = urlText;
+                textArea.value = shareUrl;
                 document.body.appendChild(textArea);
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                showNotification('URL이 복사되었습니다!');
+                showNotification('덱 공유 URL이 복사되었습니다!');
             }
         }
 
-        // Load from URL function
-        function loadFromUrl() {
-            const url = prompt('불러올 URL을 입력해주세요:');
-            if (url) {
-                try {
-                    const urlObj = new URL(url);
-                    const configParam = urlObj.searchParams.get('config');
-                    if (configParam) {
-                        const config = decodeConfiguration(configParam);
-                        if (config && applyConfiguration(config)) {
-                            showNotification('덱 구성이 성공적으로 로드되었습니다!');
-                            // Update URL
-                            window.history.replaceState({}, '', `${window.location.pathname}?config=${configParam}`);
-                        } else {
-                            showNotification('잘못된 설정 데이터입니다.', 'error');
-                        }
-                    } else {
-                        showNotification('URL에 설정 데이터가 없습니다.', 'error');
-                    }
-                } catch (e) {
-                    showNotification('잘못된 URL 형식입니다.', 'error');
-                }
-            }
-        }
 
         // Clear all decks function
         function clearAllDecks() {
@@ -1204,9 +1147,6 @@
             candidateCharacters.forEach(char => {
                 pool.appendChild(char);
             });
-            
-            // Hide URL display
-            document.getElementById('urlDisplay').classList.remove('show');
             
             showNotification('모든 덱이 초기화되었습니다.');
         }
