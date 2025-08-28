@@ -963,7 +963,7 @@
             updateAllAttributeIcons();
         }
 
-        // Base64 encoding/decoding functions
+        // Base64 encoding/decoding functions (UTF-8 safe)
         function encodeConfiguration() {
             const config = {
                 decks: [],
@@ -999,12 +999,24 @@
                 config.pool.push(char.dataset.character);
             });
             
-            return btoa(JSON.stringify(config));
+            // UTF-8 safe base64 encoding
+            const jsonString = JSON.stringify(config);
+            const utf8Bytes = new TextEncoder().encode(jsonString);
+            const binaryString = Array.from(utf8Bytes, byte => String.fromCharCode(byte)).join('');
+            return btoa(binaryString);
         }
 
         function decodeConfiguration(encodedConfig) {
             try {
-                const config = JSON.parse(atob(encodedConfig));
+                // UTF-8 safe base64 decoding
+                const binaryString = atob(encodedConfig);
+                const utf8Bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    utf8Bytes[i] = binaryString.charCodeAt(i);
+                }
+                const jsonString = new TextDecoder().decode(utf8Bytes);
+                const config = JSON.parse(jsonString);
+                
                 // Ensure candidates array exists for backward compatibility
                 if (!config.candidates) {
                     config.candidates = [];
