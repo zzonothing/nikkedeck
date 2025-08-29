@@ -118,7 +118,7 @@ const CHARACTER_DATA = {
     '382': { name: '레오나', subName: '레오나', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
     '391': { name: '아인', subName: '아인', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
     '400': { name: '길티', subName: '길티', attribute: '풍압', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
-    '403': { name: '퀀시', subName: '퀀시', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
+    '403': { name: '퀀시 : 이스케이프 퀸', subName: '퀀시', attribute: '수냉', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '3' },
     '411': { name: '플로라', subName: '플로라', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
     '412': { name: '트리나', subName: '트리나', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '2' },
     '430': { name: '노이즈', subName: '노이즈', attribute: '전격', rarity: 'SSR', manufacturer: '', class: '', weapon: '', burst: '1' },
