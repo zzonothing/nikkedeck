@@ -4,7 +4,8 @@
       "Bash(python:*)",
       "Bash(taskkill:*)",
       "Bash(grep:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(dir \"C:\\Users\\user\\Desktop\\nk\\nikkedeck\\nikkedeck\\images\\si_c*41*\" /b)"
     ],
     "deny": [],
     "ask": []
