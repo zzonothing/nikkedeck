@@ -697,16 +697,21 @@ document.addEventListener('dragover', function(e) {
     }
     // Character pool drag over (both candidate and main pool)
     else if (e.target.classList.contains('character-grid') || 
-             (e.target.classList.contains('character') && e.target.parentElement.classList.contains('character-grid'))) {
+             (e.target.classList.contains('character') && e.target.parentElement.classList.contains('character-grid')) ||
+             e.target.closest('.character-grid')) {
         e.preventDefault();
         
         if (draggedFromPool && draggedElement) {
-            const targetGrid = e.target.classList.contains('character-grid') ? e.target : e.target.parentElement;
-            const indicator = createDropIndicator(targetGrid);
-            const position = getDropPosition(e, targetGrid);
-            indicator.style.left = position.left + 'px';
-            indicator.style.top = position.top + 'px';
-            indicator.classList.add('show');
+            const targetGrid = e.target.classList.contains('character-grid') ? e.target : 
+                              e.target.parentElement && e.target.parentElement.classList.contains('character-grid') ? e.target.parentElement :
+                              e.target.closest('.character-grid');
+            if (targetGrid) {
+                const indicator = createDropIndicator(targetGrid);
+                const position = getDropPosition(e, targetGrid);
+                indicator.style.left = position.left + 'px';
+                indicator.style.top = position.top + 'px';
+                indicator.classList.add('show');
+            }
         }
     }
 });
@@ -781,11 +786,14 @@ document.addEventListener('drop', function(e) {
     }
     // Drop on character pool (both candidate and main pool)
     else if ((e.target.classList.contains('character-grid') || 
-             (e.target.classList.contains('character') && e.target.parentElement.classList.contains('character-grid'))) 
+             (e.target.classList.contains('character') && e.target.parentElement.classList.contains('character-grid')) ||
+             e.target.closest('.character-grid')) 
              && draggedElement) {
         e.preventDefault();
         
-        const targetGrid = e.target.classList.contains('character-grid') ? e.target : e.target.parentElement;
+        const targetGrid = e.target.classList.contains('character-grid') ? e.target : 
+                          e.target.parentElement && e.target.parentElement.classList.contains('character-grid') ? e.target.parentElement :
+                          e.target.closest('.character-grid');
         const characters = [...targetGrid.children].filter(child => child.classList.contains('character') && child !== draggedElement);
         const position = getDropPosition(e, targetGrid);
         
@@ -999,9 +1007,12 @@ document.addEventListener('touchmove', function(e) {
                 elementBelow.parentElement.classList.add('drag-over');
                 touchDropTarget = elementBelow.parentElement;
             } else if (elementBelow && (elementBelow.classList.contains('character-grid') || 
-                      (elementBelow.classList.contains('character') && elementBelow.parentElement.classList.contains('character-grid')))) {
+                      (elementBelow.classList.contains('character') && elementBelow.parentElement.classList.contains('character-grid')) ||
+                      elementBelow.closest('.character-grid'))) {
                 // Handle drop on character pools (candidate and main)
-                const grid = elementBelow.classList.contains('character-grid') ? elementBelow : elementBelow.parentElement;
+                const grid = elementBelow.classList.contains('character-grid') ? elementBelow : 
+                            elementBelow.parentElement && elementBelow.parentElement.classList.contains('character-grid') ? elementBelow.parentElement :
+                            elementBelow.closest('.character-grid');
                 touchDropTarget = grid;
             } else {
                 touchDropTarget = null;
@@ -1209,111 +1220,9 @@ function applyAllFilters() {
     });
 }
 
-// Initialize filters and routing on page load
+// Initialize filters on page load
 window.addEventListener('load', function() {
     // Apply initial filter state (show all)
     applyAllFilters();
-    
-    // Initialize URL routing
-    initializeRouting();
 });
 
-// URL routing system
-const routes = {
-    '/': 'deck-maker',
-    '/deckmaker': 'deck-maker',
-    '/module': 'module-simulation',
-    '/character-info': 'character-info',
-    '/team-analysis': 'team-analysis',
-    '/guide': 'guide'
-};
-
-// Get page ID from URL path
-function getPageFromPath(path) {
-    // Remove any query parameters or hash
-    const cleanPath = path.split('?')[0].split('#')[0];
-    return routes[cleanPath] || 'deck-maker'; // Default to deck-maker
-}
-
-// Show page based on page ID
-function showPage(pageId) {
-    // Hide all pages
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    
-    // Show selected page
-    const targetPage = document.getElementById(pageId);
-    if (targetPage) {
-        targetPage.classList.add('active');
-    }
-    
-    // Update navbar active state based on current page
-    updateNavbarActiveState(pageId);
-}
-
-// Update navbar active state
-function updateNavbarActiveState(pageId) {
-    document.querySelectorAll('.navbar a').forEach(link => {
-        link.classList.remove('active');
-    });
-
-    // Find the correct nav link for the current page
-    const currentPath = getCurrentPathForPage(pageId);
-    const activeLink = document.querySelector(`.navbar a[href="${currentPath}"]`);
-    if (activeLink) {
-        activeLink.classList.add('active');
-    }
-}
-
-// Get URL path for page ID
-function getCurrentPathForPage(pageId) {
-    for (const [path, id] of Object.entries(routes)) {
-        if (id === pageId) {
-            return path === '/' ? '/deckmaker' : path; // Use /deckmaker for consistency
-        }
-    }
-    return '/deckmaker';
-}
-
-// Navigate to a specific route
-function navigateToRoute(path) {
-    // Update browser URL without page reload
-    history.pushState({}, '', path);
-    
-    // Show the corresponding page
-    const pageId = getPageFromPath(path);
-    showPage(pageId);
-}
-
-// Handle navigation link clicks
-function handleNavClick(event) {
-    event.preventDefault();
-    const path = event.target.getAttribute('href');
-    navigateToRoute(path);
-}
-
-// Handle browser back/forward buttons
-window.addEventListener('popstate', function(event) {
-    const pageId = getPageFromPath(window.location.pathname);
-    showPage(pageId);
-});
-
-// Route initialization on page load
-function initializeRouting() {
-    // Get current path and show appropriate page
-    const currentPath = window.location.pathname;
-    const pageId = getPageFromPath(currentPath);
-    
-    // If we're on root path, redirect to /deckmaker
-    if (currentPath === '/' || currentPath === '/index.html') {
-        history.replaceState({}, '', '/deckmaker');
-    }
-    
-    showPage(pageId);
-    
-    // Add click handlers to navigation links
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', handleNavClick);
-    });
-}
