@@ -731,9 +731,17 @@ document.addEventListener('dragend', function(e) {
 
 // Drag over event
 document.addEventListener('dragover', function(e) {
+    // Handle deck slot or character within deck slot
+    let targetSlot = null;
     if (e.target.classList.contains('deck-slot')) {
+        targetSlot = e.target;
+    } else if (e.target.classList.contains('character') && e.target.parentElement.classList.contains('deck-slot')) {
+        targetSlot = e.target.parentElement;
+    }
+    
+    if (targetSlot) {
         e.preventDefault();
-        e.target.classList.add('drag-over');
+        targetSlot.classList.add('drag-over');
     }
     // Character pool drag over (both candidate and main pool)
     else if (e.target.classList.contains('character-grid') || 
@@ -760,21 +768,33 @@ document.addEventListener('dragover', function(e) {
 document.addEventListener('dragleave', function(e) {
     if (e.target.classList.contains('deck-slot')) {
         e.target.classList.remove('drag-over');
+    } else if (e.target.classList.contains('character') && e.target.parentElement.classList.contains('deck-slot')) {
+        e.target.parentElement.classList.remove('drag-over');
     }
 });
 
 // Drop event
 document.addEventListener('drop', function(e) {
-    // Drop on deck slot
+    // Handle drop on deck slot or character within deck slot
+    let targetSlot = null;
     if (e.target.classList.contains('deck-slot')) {
+        targetSlot = e.target;
+    } else if (e.target.classList.contains('character') && e.target.parentElement.classList.contains('deck-slot')) {
+        targetSlot = e.target.parentElement;
+    }
+    
+    // Drop on deck slot
+    if (targetSlot) {
         e.preventDefault();
-        e.target.classList.remove('drag-over');
+        targetSlot.classList.remove('drag-over');
         
         if (draggedElement) {
-            // Check if slot already has character
-            if (e.target.children.length > 0) {
+            // Check if slot already has character (excluding the dragged element itself)
+            const existingCharacter = targetSlot.children.length > 0 ? targetSlot.children[0] : null;
+            const hasOtherCharacter = existingCharacter && existingCharacter !== draggedElement;
+            
+            if (hasOtherCharacter) {
                 // Swap characters
-                const existingCharacter = e.target.children[0];
                 
                 if (draggedFromDeck && draggedFromSlot !== null) {
                     // Swap between deck slots
@@ -782,8 +802,8 @@ document.addEventListener('drop', function(e) {
                     
                     // Remove existing character from target slot and clear its styling
                     existingCharacter.classList.remove('placed');
-                    e.target.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
-                    e.target.classList.add('empty-slot');
+                    targetSlot.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
+                    targetSlot.classList.add('empty-slot');
                     
                     // Place existing character in original slot
                     originalSlot.appendChild(existingCharacter);
@@ -796,8 +816,8 @@ document.addEventListener('drop', function(e) {
                     // Dragging from candidate or main pool to occupied deck slot
                     // Remove existing character and send it to dragged element's original position
                     existingCharacter.classList.remove('placed');
-                    e.target.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
-                    e.target.classList.add('empty-slot');
+                    targetSlot.classList.remove('occupied', 'attribute-전격', 'attribute-작열', 'attribute-철갑', 'attribute-수냉', 'attribute-풍압');
+                    targetSlot.classList.add('empty-slot');
                     
                     // Place existing character at the exact original position of dragged element
                     if (draggedPlaceholder && draggedPlaceholder.parentElement) {
@@ -816,12 +836,12 @@ document.addEventListener('drop', function(e) {
             }
             
             // Place dragged character in target slot
-            e.target.appendChild(draggedElement);
-            e.target.classList.add('occupied');
-            e.target.classList.remove('empty-slot');
+            targetSlot.appendChild(draggedElement);
+            targetSlot.classList.add('occupied');
+            targetSlot.classList.remove('empty-slot');
             draggedElement.classList.add('placed');
             addAttributeIcon(draggedElement);  // Add attribute icon when placing
-            applyAttributeBorderColor(e.target, draggedElement);  // Apply attribute border color
+            applyAttributeBorderColor(targetSlot, draggedElement);  // Apply attribute border color
         }
     }
     // Drop on character pool (both candidate and main pool)
@@ -1040,12 +1060,16 @@ document.addEventListener('touchmove', function(e) {
             });
             
             // Highlight drop target
+            let targetSlot = null;
             if (elementBelow && elementBelow.classList.contains('deck-slot')) {
-                elementBelow.classList.add('drag-over');
-                touchDropTarget = elementBelow;
-            } else if (elementBelow && elementBelow.parentElement && elementBelow.parentElement.classList.contains('deck-slot')) {
-                elementBelow.parentElement.classList.add('drag-over');
-                touchDropTarget = elementBelow.parentElement;
+                targetSlot = elementBelow;
+            } else if (elementBelow && elementBelow.classList.contains('character') && elementBelow.parentElement.classList.contains('deck-slot')) {
+                targetSlot = elementBelow.parentElement;
+            }
+            
+            if (targetSlot) {
+                targetSlot.classList.add('drag-over');
+                touchDropTarget = targetSlot;
             } else if (elementBelow && (elementBelow.classList.contains('character-grid') || 
                       (elementBelow.classList.contains('character') && elementBelow.parentElement.classList.contains('character-grid')) ||
                       elementBelow.closest('.character-grid'))) {
@@ -1081,10 +1105,12 @@ document.addEventListener('touchend', function(e) {
             
             // Perform drop operation
             if (touchDropTarget.classList.contains('deck-slot')) {
-            // Check if slot already has character
-            if (touchDropTarget.children.length > 0) {
+            // Check if slot already has character (excluding the dragged element itself)
+            const existingCharacter = touchDropTarget.children.length > 0 ? touchDropTarget.children[0] : null;
+            const hasOtherCharacter = existingCharacter && existingCharacter !== touchTarget;
+            
+            if (hasOtherCharacter) {
                 // Swap characters
-                const existingCharacter = touchDropTarget.children[0];
                 
                 if (draggedFromDeck && draggedFromSlot !== null) {
                     // Swap between deck slots
